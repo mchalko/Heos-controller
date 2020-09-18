@@ -310,6 +310,13 @@ function insertHiddenCell(row, column, value){
 	return cell;
 }
 	
+function createDelButton(){
+	var button = document.createElement("BUTTON");
+	button.textContent = "Remove"
+	button.onclick = btn_del_click;
+	return button;
+}
+	
 function saveClosePopup(){
 	document.getElementById("popup_wlanAdd").style.display = "none";
 	var row = document.getElementById("tb_networks").insertRow(1);
@@ -317,13 +324,7 @@ function saveClosePopup(){
 		return;
 	row.insertCell(0).innerHTML = document.getElementById("wlan_ssid").value;
 	row.insertCell(1).innerHTML = document.getElementById("wlan_select").value;
-	
-	var buttonCell = row.insertCell(2);
-	var button = document.createElement("BUTTON");
-	button.textContent = "Remove"
-	button.onclick = btn_del_click;
-	buttonCell.appendChild(button);
-	
+	row.insertCell(2).appendChild(createDelButton());
 	insertHiddenCell(row, 3, document.getElementById("wlan_pass").value);
 	insertHiddenCell(row, 4, document.getElementById("wlan_bssid").value);
 	insertHiddenCell(row, 5, document.getElementById("wlan_ip").value + "," 
@@ -385,9 +386,21 @@ document.getElementById("wlan_en").checked = false;
 document.getElementById("heos_name").value = "Sample";
 document.getElementById("heos_user").value = "user";
 document.getElementById("heos_pass").value = "123456";
-var ssids = [["sample", "55:44:66:66:66:66", "-50 dBm", "None"],["sample2", "55:44:66:66:66:65", "-40 dBm", "WPA2"]]	
+var ssids = [["sample", "55:44:66:66:66:66", "-50 dBm", "None"],["sample2", "55:44:66:66:66:65", "-40 dBm", "WPA2"]];	
+var knownNetworks = [["sample", "123456", "55:44:66:66:66:66","192.168.1.1,255.255.255.0,192.168.1.1" ]];
 <!------------------------------->
 
+var table_networks = document.getElementById("tb_networks");
+for(i = 0; i < knownNetworks.length; i++){
+	var row = table_networks.insertRow(1);
+	row.insertCell(0).innerHTML = knownNetworks[i][0];
+	row.insertCell(1).innerHTML = (knownNetworks[i][3] ? "static" : "dhcp");
+	row.insertCell(2).appendChild(createDelButton());
+	insertHiddenCell(row, 3, knownNetworks[i][1]);
+	insertHiddenCell(row, 4, knownNetworks[i][2]);
+	insertHiddenCell(row, 5, knownNetworks[i][3]);
+}
+	
 var table_ssid = document.getElementById("tb_ssids");
 for(i = 0; i < ssids.length; i++){
 	var row = table_ssid.insertRow(1);
