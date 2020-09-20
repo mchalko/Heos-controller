@@ -354,7 +354,7 @@ function sumbit(){
 			profile += cells[j].innerHTML;
 			if(j+1<cells.length) profile += ";";
 		}
-		data.append("profile", profile)
+		data.append("profile", profile);
 	}
 	for (var key of data.keys()) {
    console.log(key); 
@@ -373,23 +373,36 @@ function sumbit(){
 	});
 }
 <!-- insert current values here -->
-document.getElementById("ap_ssid").value = "sample";
-document.getElementById("ap_pass").value = "123456";
-document.getElementById("ap_ip").value = "192.168.0.1";
-document.getElementById("ap_mask").value = "255.255.255.0";
-document.getElementById("eth_en").checked = true;
-ipConfSelector("eth", document.getElementById("eth_select").value = "static");
-document.getElementById("eth_ip").value = "192.168.1.1";
-document.getElementById("eth_mask").value = "255.255.255.0";
-document.getElementById("eth_gate").value = "192.168.1.1";
-document.getElementById("wlan_en").checked = false;
-document.getElementById("heos_name").value = "Sample";
-document.getElementById("heos_user").value = "user";
-document.getElementById("heos_pass").value = "123456";
+var ap_ssid = "samle";
+var ap_pass = "123456797";
+var ap_ip = "192.168.0.1";
+var ap_mask = "255.255.255.0";
+var eth_en = true;
+var eth_ip = "192.168.1.1";
+var eth_mask = "255.255.255.0";
+var eth_gate = "192.168.1.10";
+var wlan_en = true;
+var heos_name = "Sample";
+var heos_user = "user";
+var heos_pass = "123456";
 var ssids = [["sample", "55:44:66:66:66:66", "-50 dBm", "None"],["sample2", "55:44:66:66:66:65", "-40 dBm", "WPA2"]];	
 var knownNetworks = [["sample", "123456", "55:44:66:66:66:66","192.168.1.1,255.255.255.0,192.168.1.1" ]];
 <!------------------------------->
-
+	
+document.getElementById("ap_ssid").value = ap_ssid;
+document.getElementById("ap_pass").value = ap_pass;
+document.getElementById("ap_ip").value = ap_ip;
+document.getElementById("ap_mask").value = ap_mask;
+document.getElementById("eth_en").checked = eth_en;
+ipConfSelector("eth", document.getElementById("eth_select").value = (eth_ip?"static":"dhcp"));
+document.getElementById("eth_ip").value = eth_ip;
+document.getElementById("eth_mask").value = eth_mask;
+document.getElementById("eth_gate").value = eth_gate;
+document.getElementById("wlan_en").checked = wlan_en;
+document.getElementById("heos_name").value = heos_name;
+document.getElementById("heos_user").value = heos_user;
+document.getElementById("heos_pass").value = heos_pass;
+	
 var table_networks = document.getElementById("tb_networks");
 for(i = 0; i < knownNetworks.length; i++){
 	var row = table_networks.insertRow(1);
