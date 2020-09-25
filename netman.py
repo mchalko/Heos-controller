@@ -1,6 +1,6 @@
 import network
 import machine
-import fileman as conf
+from structures import WLANconfig, ETHconfig, APconfig
 import ubinascii
 
 AUTHMODE = {network.AUTH_OPEN: "open",
@@ -15,50 +15,68 @@ __interface_ETH = network.LAN(mdc=machine.Pin(13), mdio=machine.Pin(14), power=m
                               phy_type=network.PHY_LAN8720)
 
 def __connectETH(ifconfig=None):
-    config = conf.stringtoip(ifconfig)
-    if config:  # use static ip
-        __interface_ETH.ifconfig(config)
-    else:  # use dhcp
-        __interface_ETH.ifconfig()
+    """
+    initiates connecting to lan network
+    once static address is set, if config can't be switched back to dhcp (library bug)
+    :param ifconfig: tuple with ip config addresses - strings (IP, mask, gate, dns) or None for dhcp
+    """
+    if ifconfig:  # use static ip
+        __interface_ETH.ifconfig(ifconfig)
+
     __interface_ETH.active(True)
 
 
 def __connectWLAN(ssid, password, ifconfig=None, bssid=None):
-    config = conf.stringtoip(ifconfig)
-    if config:
-        __interface_STA.ifconfig(config)
+    """
+    connects to wifi network
+    once static address is set, ip config can't be switched back to dhcp (library bug)
+    :param ssid: ssid
+    :param password: password
+    :param ifconfig: tuple with ip config addresses - strings (IP, mask, gate, dns) or None for dhcp
+    :param bssid: mac of network
+    """
+    if ifconfig: # use static ip
+        __interface_STA.ifconfig(ifconfig)
     __interface_STA.active(True)
+    # empty pass string means no password. SSID can't be empty
+    __interface_STA.connect(ssid, password if password else None, bssid=bssid)
 
-    __interface_STA.connect(ssid, password, bssid=bssid)
-
-def connect(config):
+def connect(wlanconfig = None, ethconfig = None):
     """
     tries to connect to a network
-    :param config: configuration of the connection
-    :return: True if connecting was initiated
+    :param wlanconfig: WLANconfig object
+    :param ethconfig: ETHconfig object
+    :return: True if connection was initiated
     """
 
-    if config.ETH_en:
-        __connectETH(config.ETH_conf)
-    if config.WLAN_en:
+    if ethconfig and ethconfig.enabled:
+        __connectETH(ethconfig.net.getnet())
+    if wlanconfig and wlanconfig.enabled:
         networks = discoverAPs()
-        for ssid, bssid, _ in networks:  # check if networks are available
-            for profile in config.WLAN_profiles:
-                if profile.ssid == ssid:
-                    if not profile.bssid :
-                        __connectWLAN(profile.ssid, profile.password, profile.conf)
+        for ssid, bssid, rssi, auth, hidden in networks:  # loop through available networks
+            for profile in wlanconfig.profiles: # check each known network
+                if profile.ssid == ssid: # ssid match
+                    if not profile.bssid : # bssid isn't specified in network profile, connect
+                        __connectWLAN(profile.ssid, profile.password, profile.net.getnet())
                         return True
-                    elif profile.bssid == bssid:
-                        __connectWLAN(profile.ssid, profile.password, profile.conf, profile.bssid)
+                    elif profile.bssid == bssid: # check if bssid matches
+                        __connectWLAN(profile.ssid, profile.password, profile.net.getnet(), profile.bssid)
                         return True
-    return __configuration.ETH_en or __configuration.WLAN_en
+
+    return (wlanconfig and wlanconfig.enabled) or (ethconfig and ethconfig.enabled)
 
 
 def disconnect():
-    __interface_ETH.active(False)
-    if __interface_STA.isconnected():
-        __interface_STA.disconnect()
-    __interface_STA.active(False)
+    """
+    deactivates eth and wlan network connections
+    """
+
+    # eth can't be deactivated - library bug
+    #__interface_ETH.active(False)
+    if __interface_STA.active():
+        if __interface_STA.isconnected():
+            __interface_STA.disconnect()
+        __interface_STA.active(False)
 
 
 def status():
@@ -77,17 +95,19 @@ def isconnected():
     return __interface_STA.isconnected() or __interface_ETH.isconnected()
 
 
-def activateAP(config):
+def startAP(apconfig):
     """
-    creates an access point using given configuration with WPA2 security.
-    :param config: configuration
+    creates an access point using given params with WPA2 security.
+    :param apconfig: APconfig object
     """
-    __interface_AP.ifconfig(config.AP_conf)
+    net = apconfig.net.getnet()
+    if net :
+        __interface_AP.ifconfig(net)
     __interface_AP.active(True)
-    __interface_AP.config(essid=config.AP_ssid, password=config.AP_pass, authmode=network.AUTH_WPA2_PSK)
+    __interface_AP.config(essid=apconfig.ssid, password=apconfig.password, authmode=network.AUTH_WPA2_PSK)
 
 
-def deactivateAP():
+def stopAP():
     """
     disables the access point
     """
@@ -96,7 +116,7 @@ def deactivateAP():
 
 def discoverAPs():
     """
-    :return: list of lists of access points in range [ssid, bssid, RSSI, authmode]
+    :return: list of lists of access points in range [ssid, bssid, RSSI, authmode, hidden]
     """
     __interface_STA.active(True)
     networks = __interface_STA.scan()
@@ -105,5 +125,6 @@ def discoverAPs():
         netlist.append([n[0].decode('utf-8'),
                         ubinascii.hexlify(n[1], ':').decode('ascii').upper(),
                         str(n[3])+" dBm",
-                        AUTHMODE[n[4]]])
+                        AUTHMODE[n[4]],
+                        str(n[5]).lower()])
     return netlist
