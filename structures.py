@@ -13,7 +13,8 @@ class Net(object):
         if len(net):
             self.__conf = Net.nettostring(*net)
         else:
-            self.__conf = string
+
+            self.__conf = "" if string.lower() == "none" else string
 
         net = Net.stringtonet(self.__conf)
           # contains ip tuples
@@ -74,7 +75,7 @@ class Net(object):
         :param string: ip config in format {IP},{mask}[,gate][,dns]
         :return: tuple (IP, mask, gate, dns) or empty string
         """
-        if not string:  # invalid param
+        if string=="" or string.lower() == "dhcp":  # invalid param
             return ""
 
         parts = string.split(SEP_IP)
@@ -87,7 +88,7 @@ class Net(object):
         elif len(parts) == 4:
             return tuple(parts)
         else:
-            return ""
+            raise ValueError
 
 
 class Profile(object):
@@ -100,6 +101,17 @@ class Profile(object):
         self.bssid = bssid
         self.password = password
         self.net = Net(string=net)
+
+
+    @property
+    def ssid(self):
+        return self.__ssid
+
+    @ssid.setter
+    def ssid(self, val):
+        if not val:  # check whether val is not empty
+            raise ValueError
+        self.__ssid = val
 
     @property
     def bssid(self):
@@ -193,6 +205,16 @@ class APconfig(object):
         self.net = Net(string="192.168.0.1,255.255.255.0")
 
     @property
+    def ssid(self):
+        return self.__ssid
+
+    @ssid.setter
+    def ssid(self, val):
+        if not val:  # check whether val is not empty
+            raise ValueError
+        self.__ssid = val
+
+    @property
     def password(self):
         return self.__password
 
@@ -252,3 +274,4 @@ class Configuration(object):
 
     def __repr__(self):
         return self.__str__()
+

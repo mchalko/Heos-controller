@@ -1,6 +1,6 @@
 import time
 
-SHORT_PRESS_MS = 20  # minimal duration of press, anything less is noise
+SHORT_PRESS_MS = 40  # minimal duration of press, anything less is noise
 LONG_PRESS_MS = 750  # threshold for differentiating long button press
 HOLD_INVOKE_INT_MS = 400  # interval for periodical ivoking of hold callback
 

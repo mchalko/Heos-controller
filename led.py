@@ -15,8 +15,11 @@ class Led(object):
     def off(self):
         self.__pin.value(1)
 
-    def value(self):
-        return not self.__pin.value()
+    def value(self, state = None):
+        if not state:
+            return not self.__pin.value()
+        else:
+            self.__pin.value(state)
 
 
 __blink_config_ms = 0

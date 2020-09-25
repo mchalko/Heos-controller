@@ -10,16 +10,47 @@ import structures
 import netman
 import gc
 
-#create buttons 
-#buttons = (Button(23), Button(5), Button(23), Button(5), Button(13), Button(12))
-#btn_volUp, btn_volDown, btn_1, btn_2, btn_3, btn_4 = buttons
+CONF_FILE = "device.conf"
+#create buttons
+buttons = (Button(34), Button(35), Button(14), Button(39), Button(33), Button(36))
+btn_1, btn_2, btn_3, btn_4, btn_5, btn_6 = buttons
 #create leds
-#leds = (Led(23), Led(15), Led(4), Led(17), Led(18), Led(5), Led(16), Led(2))
-#led_volUp, led_volDown, led_3, led_4, led_5, led_6, led_7 = leds
+leds = (Led(2), Led(23), Led(5), Led(4), Led(18), Led(17), Led(16), Led(15))
+led_1, led_2, led_3, led_4, led_5, led_6, led_7, led_8 = leds
 
 gc.collect()
-CONF = "device.conf"
+config = fileman.loadconfig(CONF_FILE)
+if not config: # use default config if configuration file is corrupted
+    config = structures.Configuration()
 
-config = fileman.loadconfig(CONF)
 
+if btn_1.value(): # button pressed on power up
+    # enter configuration mode
+
+    netman.startAP(config.AP)
+    try:
+        confman.start(CONF_FILE)
+        led.blink_init(leds, 5)
+        while True:
+            confman.listen()
+            led.blink_config(leds)
+    except Exception as e:
+        confman.stop()
+        raise e
+else:
+    # enter normal mode
+    led.blink_init(leds, 2)
+    for i,b in enumerate(buttons):
+        b.onpress(lambda i=i:leds[i].on())
+        b.onrelease(lambda i=i:leds[i].off())
+
+    _millis_lastreconnect = 0
+    while True:
+        if not netman.isconnected(): # try connect
+            if time.ticks_diff(time.ticks_ms(), _millis_lastreconnect) > 2000:  # try to connect to network
+                _millis_lastreconnect = time.ticks_ms()
+                netman.connect(config.WLAN, config.ETH)
+
+        for b in buttons:
+            b.update()
 

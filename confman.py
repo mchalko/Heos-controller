@@ -7,7 +7,7 @@ import gc
 import select
 import errno
 import time
-
+import machine
 
 class InvalidHeader(Exception):
     pass
@@ -16,7 +16,7 @@ class InvalidHeader(Exception):
 HTTP_CODES = {200: "OK",
               400: "Bad Request",
               404: "Not Found"}
-DISOVER_INTERVAL_MS = 1500  # interval for rescanning wlan networks in reach
+DISOVER_INTERVAL_MS = 10000  # interval for rescanning wlan networks in reach
 
 __serverSocket = None  # socket of webserver
 # params of start() needed for saving the received configuration
@@ -25,6 +25,8 @@ __config = None
 # current wlans in reach
 __available_wlans = []
 __millis_wlandiscover = 0
+
+__resetscheduled_ms = None # mark device reset call
 
 
 def __respond(socket, data, code=200):
@@ -86,7 +88,7 @@ def __handleConfig(socket):
             break
         data += line
 
-    netconfig = structures.Configuration()
+    newconfig = structures.Configuration()
     data = data.decode('utf-8')
     parts = data.split("------")
     try:
@@ -99,31 +101,31 @@ def __handleConfig(socket):
             if len(values) < 2:
                 continue
             type = values[0].lower()
-            value = values[1].lower()
-            """
-            if "ap_ssid" in type:
-                netconfig.AP_ssid = value
-            elif "ap_pass" in type:
-                netconfig.AP_pass = value
-            elif "ap_net" in type:
-                netconfig.AP_net = fileman.Net(string=value)
-            elif "eth_net" in type:
-                netconfig.ETH_net = fileman.Net(string=value)
-            elif "eth_en" in type:
-                netconfig.ETH_en = True
-            elif "wlan_en" in type:
-                netconfig.WLAN_en = True
-            elif "profile" in type:
-                netconfig.WLAN_profiles.append(fileman.Profile(*value.split(fileman.SEP_VAL)))
-            elif "heos_name" in type:
-                heosconfig.name = value
-            elif "heos_user" in type:
-                heosconfig.user = value
-            elif "heos_pass" in type:
-                heosconfig.password = value
-            """
-            print(type + ":" + value)
+            value = values[1]
+            if confweb.ATTR_AP_SSID in type:
+                newconfig.AP.ssid = value
+            elif confweb.ATTR_AP_PASS in type:
+                newconfig.AP.password = value
+            elif confweb.ATTR_AP_NET in type:
+                newconfig.AP.net = fileman.Net(string=value)
+            elif confweb.ATTR_ETH_NET in type:
+                newconfig.ETH.net = fileman.Net(string=value)
+            elif confweb.ATTR_ETH_EN in type:
+                newconfig.ETH.enabled = value.lower() == "true"
+            elif confweb.ATTR_WLAN_EN in type:
+                newconfig.WLAN.enabled = value.lower() == "true"
+            elif confweb.ATTR_WLAN_PROFILE in type:
+                newconfig.WLAN.profiles.append(fileman.Profile(*value.split(fileman.SEP_VAL)))
+            elif confweb.ATTR_HEOS_NAME in type:
+                newconfig.HEOS.name = value
+            elif confweb.ATTR_HEOS_USER in type:
+                newconfig.HEOS.user = value
+            elif confweb.ATTR_HEOS_PASS in type:
+                newconfig.HEOS.password = value
 
+        fileman.saveconfig(newconfig, __file)
+        global __resetscheduled_ms
+        __resetscheduled_ms = time.ticks_ms()
         __respond(socket, "Settings were successfully applied", 200)
     except ValueError:
         __respond(socket, "Settings are invalid", 400)
@@ -172,6 +174,11 @@ def listen():
     if not __serverSocket:
         return
 
+    if __resetscheduled_ms is not None:
+        if time.ticks_diff(time.ticks_ms(), __resetscheduled_ms) > 1000 : # ensure all connections are finished and closed
+            __serverSocket.close()
+            machine.reset()
+
     global __millis_wlandiscover
     global __available_wlans
 
@@ -204,8 +211,11 @@ def listen():
 
         except InvalidHeader:
             pass  # ignore invalid or unsupported request
-            __respond(client, "Unsupported or invalid request", 400)
+        except Exception as e:
+            raise e
         finally:
             client.close()  # close the client socket
     except OSError:
         pass  # ignore
+
+
