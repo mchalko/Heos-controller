@@ -9,10 +9,11 @@ import fileman
 import structures
 import netman
 import gc
+import network
 
 CONF_FILE = "device.conf"
 #create buttons
-buttons = (Button(34), Button(35), Button(14), Button(39), Button(33), Button(36))
+buttons = (Button(34), Button(35), Button(32), Button(39), Button(33), Button(36))
 btn_1, btn_2, btn_3, btn_4, btn_5, btn_6 = buttons
 #create leds
 leds = (Led(2), Led(23), Led(5), Led(4), Led(18), Led(17), Led(16), Led(15))
@@ -26,31 +27,35 @@ if not config: # use default config if configuration file is corrupted
 
 if btn_1.value(): # button pressed on power up
     # enter configuration mode
-
     netman.startAP(config.AP)
     try:
         confman.start(CONF_FILE)
-        led.blink_init(leds, 5)
+        led.blink_init(*leds, count=5)
         while True:
             confman.listen()
-            led.blink_config(leds)
+            led.blink_config(*leds)
     except Exception as e:
         confman.stop()
         raise e
 else:
     # enter normal mode
-    led.blink_init(leds, 2)
+    led.blink_init(*leds, count=2)
     for i,b in enumerate(buttons):
         b.onpress(lambda i=i:leds[i].on())
         b.onrelease(lambda i=i:leds[i].off())
 
     _millis_lastreconnect = 0
     while True:
-        if not netman.isconnected(): # try connect
-            if time.ticks_diff(time.ticks_ms(), _millis_lastreconnect) > 2000:  # try to connect to network
+        if not netman.isconnected(): # not connected, try reconnect
+            if not(netman.statusWLAN() == network.STAT_CONNECTING or netman.statusETH() == network.STAT_CONNECTING) and time.ticks_diff(time.ticks_ms(), _millis_lastreconnect) > 2000:  # try connecting after the interval
                 _millis_lastreconnect = time.ticks_ms()
                 netman.connect(config.WLAN, config.ETH)
+            if netman.statusWLAN() == network.STAT_CONNECTING or netman.statusETH() == network.STAT_CONNECTING:
+                led.blink_connecting(led_7)
+        else:
+            if not led_7.value() : led_7.on()
 
-        for b in buttons:
-            b.update()
+        for b in buttons: b.update()
+
+
 

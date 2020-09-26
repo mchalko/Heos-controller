@@ -86,6 +86,14 @@ def status():
     """
     return (__interface_STA.status(), __interface_ETH.status())
 
+def statusWLAN():
+    return __interface_STA.status()
+
+def statusAP():
+    return __interface_AP.status()
+
+def statusETH():
+    return __interface_ETH.status()
 
 def isconnected():
     """

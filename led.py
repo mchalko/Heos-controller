@@ -15,7 +15,7 @@ class Led(object):
     def off(self):
         self.__pin.value(1)
 
-    def value(self, state = None):
+    def value(self, state=None):
         if not state:
             return not self.__pin.value()
         else:
@@ -25,7 +25,7 @@ class Led(object):
 __blink_config_ms = 0
 
 
-def blink_config(leds):
+def blink_config(*leds):
     global __blink_config_ms
 
     if time.ticks_diff(time.ticks_ms(), __blink_config_ms) >= 200:
@@ -36,25 +36,28 @@ def blink_config(leds):
 
 
 __blink_connecting_ms = 0
-__blink_connecting_led = 0
 
 
-def blink_connecting(leds):
+def blink_connecting(*leds):
     global __blink_connecting_ms
-    global __blink_connecting_led
 
-    if time.ticks_diff(time.ticks_ms(), __blink_connecting_ms) >= 200:
+    if time.ticks_diff(time.ticks_ms(), __blink_connecting_ms) >= 100:
         __blink_connecting_ms = time.ticks_ms()
-        if leds[__blink_connecting_led].value():
-            leds[__blink_connecting_led].off()
+        if leds[0].value():
+            for l in leds:
+                l.off()
         else:
-            leds[__blink_connecting_led].on()
-            __blink_connecting_led += 1
-            if __blink_connecting_led == len(leds):
-                __blink_connecting_led = 0
+            for l in leds:
+                l.on()
 
 
-def blink_error(leds):
-    for l in leds:
-        l.on()
+def blink_error(*leds):
+    for l in leds: l.on()
 
+
+def blink_init(*leds, count=3):
+    for c in range(count):
+        for l in leds: l.on()
+        time.sleep_ms(200)
+        for l in leds: l.off()
+        time.sleep_ms(200)
