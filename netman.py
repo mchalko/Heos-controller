@@ -11,7 +11,7 @@ AUTHMODE = {network.AUTH_OPEN: "open",
 
 __interface_AP = network.WLAN(network.AP_IF)
 __interface_STA = network.WLAN(network.STA_IF)
-__interface_ETH = network.LAN(mdc=machine.Pin(13), mdio=machine.Pin(14), power=machine.Pin(32), id=None, phy_addr=0,
+__interface_ETH = network.LAN(mdc=machine.Pin(13), mdio=machine.Pin(14), power=machine.Pin(32), phy_addr=0,
                               phy_type=network.PHY_LAN8720)
 
 def __connectETH(ifconfig=None):
@@ -71,8 +71,7 @@ def disconnect():
     deactivates eth and wlan network connections
     """
 
-    # eth can't be deactivated - library bug
-    #__interface_ETH.active(False)
+    __interface_ETH.active(False)
     if __interface_STA.active():
         if __interface_STA.isconnected():
             __interface_STA.disconnect()

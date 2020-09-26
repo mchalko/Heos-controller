@@ -13,7 +13,7 @@ import network
 
 CONF_FILE = "device.conf"
 #create buttons
-buttons = (Button(34), Button(35), Button(32), Button(39), Button(33), Button(36))
+buttons = (Button(34), Button(35), Button(21), Button(39), Button(33), Button(36))
 btn_1, btn_2, btn_3, btn_4, btn_5, btn_6 = buttons
 #create leds
 leds = (Led(2), Led(23), Led(5), Led(4), Led(18), Led(17), Led(16), Led(15))
