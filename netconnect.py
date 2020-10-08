@@ -103,14 +103,15 @@ def isconnected():
 
 def startAP(apconfig):
     """
-    creates an access point using given params with WPA2 security.
+    creates an access point using given params
     :param apconfig: APconfig object
     """
     net = apconfig.net.getnet()
     if net :
         __interface_AP.ifconfig(net)
     __interface_AP.active(True)
-    __interface_AP.config(essid=apconfig.ssid, password=apconfig.password, authmode=network.AUTH_WPA2_PSK)
+    __interface_AP.config(essid=apconfig.ssid, password=apconfig.password,
+                          authmode=network.AUTH_OPEN if not apconfig.password else network.AUTH_WPA2_PSK)
 
 
 def stopAP():

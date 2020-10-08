@@ -10,28 +10,27 @@ class Net(object):
     """
 
     def __init__(self, string="", net=[]):
+        """
+        initialize Net object
+        :param string: create net object from string
+        :param net: create net object from net
+        """
         if len(net):
-            self.__conf = Net.nettostring(*net)
+            self.__conf = Net.stringtonet(SEP_IP.join(net))
         else:
-
-            self.__conf = "" if string.lower() == "none" else string
-
-        net = Net.stringtonet(self.__conf)
-          # contains ip tuples
+            self.__conf = Net.stringtonet(string)
+        # contains ip tuples
         if net and any(not Net.isip(ip) for ip in net):
             raise ValueError  # raise error if invalid ip detected
 
-    def getstring(self):
-        return self.__conf
-
     def getnet(self):
-        return Net.stringtonet(self.__conf)
+        return self.__conf
 
     def __repr__(self):
-        return self.__conf
+        return str(self.__conf)
 
     def __str__(self):
-        return self.__conf
+        return str(self.__conf)
 
     @staticmethod
     def isip(ip):
@@ -55,28 +54,15 @@ class Net(object):
         return True
 
     @staticmethod
-    def nettostring(ip=None, mask=None, gate=None, dns=None):
-        """
-        Converts ip configuration - list of ip addresses into string
-        """
-        val = ""
-        if ip:
-            val = ip + SEP_IP + mask
-            if gate:
-                val += SEP_IP + gate
-            if dns:
-                val += SEP_IP + dns
-        return val
-
-    @staticmethod
     def stringtonet(string):
         """
         Converts string with IP configuration into a list of IP addresses
         :param string: ip config in format {IP},{mask}[,gate][,dns]
-        :return: tuple (IP, mask, gate, dns) or empty string
+        :return: tuple (IP, mask, gate, dns) or empty tuple
         """
-        if string=="" or string.lower() == "dhcp":  # invalid param
-            return ""
+        lower = string.lower()
+        if not lower or lower == "dhcp" or lower == "none":  # invalid param
+            return ()
 
         parts = string.split(SEP_IP)
         parts = [p for p in parts if p]  # remove empty strings
@@ -96,12 +82,11 @@ class Profile(object):
     Class for storing wlan profile info
     """
 
-    def __init__(self, ssid="", password="", bssid="", net=""):
+    def __init__(self, ssid="", password="", bssid="", net=[]):
         self.ssid = ssid
         self.bssid = bssid
         self.password = password
-        self.net = Net(string=net)
-
+        self.net = Net(net=net)
 
     @property
     def ssid(self):
@@ -143,7 +128,6 @@ class Profile(object):
             return False
         if any(not re.match("^[A-F0-9][A-F0-9]$", p) for p in parts):
             return False
-
         return True
 
     def __str__(self):
@@ -153,7 +137,10 @@ class Profile(object):
         return self.__str__()
 
     def tolist(self):
-        return [self.ssid, self.password, self.bssid, self.net.getstring()]
+        return [self.ssid, self.password, self.bssid, self.net.getnet()]
+
+    def todict(self):
+        return {"ssid": self.ssid, "password": self.password, "bssid": self.bssid, "net": self.net.getnet()}
 
 
 class WLANconfig(object):
@@ -161,9 +148,11 @@ class WLANconfig(object):
     Class for storing wlan info
     """
 
-    def __init__(self):  # init default values
-        self.enabled = False
+    def __init__(self, enabled=False, profiles=[]):  # init default values
+        self.enabled = enabled
         self.profiles = []
+        for profile in profiles:
+            self.profiles.append(Profile(**profile))
 
     def __str__(self):
         return str(self.tolist())
@@ -174,15 +163,18 @@ class WLANconfig(object):
     def tolist(self):
         return [self.enabled, self.profiles]
 
+    def todict(self):
+        return {"enabled": self.enabled, "profiles": [x.todict() for x in self.profiles]}
+
 
 class ETHconfig(object):
     """
     Class for storing Ethernet info
     """
 
-    def __init__(self):  # init default values
-        self.enabled = False
-        self.net = Net()
+    def __init__(self, enabled=False, net=[]):  # init default values
+        self.enabled = enabled
+        self.net = Net(net=net)
 
     def __str__(self):
         return str(self.tolist())
@@ -191,7 +183,10 @@ class ETHconfig(object):
         return self.__str__()
 
     def tolist(self):
-        return [self.enabled, self.net.getstring()]
+        return [self.enabled, self.net.getnet()]
+
+    def todict(self):
+        return {"enabled": self.enabled, "net": self.net.getnet()}
 
 
 class APconfig(object):
@@ -199,10 +194,11 @@ class APconfig(object):
     Class for storing hosted network info
     """
 
-    def __init__(self):  # init default values
-        self.ssid = "ReCo"
-        self.password = "12345678"
-        self.net = Net(string="192.168.0.1,255.255.255.0")
+    def __init__(self, ssid="ReCo", password="12345678",
+                 net=['192.168.0.1', '255.255.255.0', '192.168.0.1', '8.8.8.8']):  # init default values
+        self.ssid = ssid
+        self.password = password
+        self.net = Net(net=net)
 
     @property
     def ssid(self):
@@ -220,12 +216,15 @@ class APconfig(object):
 
     @password.setter
     def password(self, val):
-        if len(val) < 8:  # min length of wifi password is 8
+        if len(val) < 8 and len(val) != 0:  # min length of wifi password is 8 or 0 for open network
             raise ValueError
         self.__password = val
 
     def tolist(self):
-        return [self.ssid, self.password, self.net.getstring()]
+        return [self.ssid, self.password, self.net.getnet()]
+
+    def todict(self):
+        return {"ssid": self.ssid, "password": self.password, "net": self.net.getnet()}
 
     def __str__(self):
         return str(self.tolist())
@@ -247,6 +246,9 @@ class Heosconfig(object):
     def tolist(self):
         return [self.name, self.user, self.password]
 
+    def todict(self):
+        return {"name": self.name, "user": self.user, "password": self.password}
+
     def __str__(self):
         return str(self.tolist())
 
@@ -259,11 +261,11 @@ class Configuration(object):
     Class for storing device configuration
     """
 
-    def __init__(self):
-        self.AP = APconfig()
-        self.ETH = ETHconfig()
-        self.WLAN = WLANconfig()
-        self.HEOS = Heosconfig()
+    def __init__(self, AP={}, ETH={}, WLAN={}, HEOS={}):
+        self.AP = APconfig(**AP)
+        self.ETH = ETHconfig(**ETH)
+        self.WLAN = WLANconfig(**WLAN)
+        self.HEOS = Heosconfig(**HEOS)
 
     def __str__(self):
         val = "AP:" + str(self.AP)
@@ -275,3 +277,5 @@ class Configuration(object):
     def __repr__(self):
         return self.__str__()
 
+    def todict(self):
+        return {"AP": self.AP.todict(), "ETH": self.ETH.todict(), "WLAN": self.WLAN.todict(), "HEOS": self.HEOS.todict()}

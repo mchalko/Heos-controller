@@ -11,7 +11,6 @@ import netconnect
 import gc
 import network
 
-CONF_FILE = "device.conf"
 #create buttons
 buttons = (Button(34), Button(35), Button(21), Button(39), Button(33), Button(36))
 btn_1, btn_2, btn_3, btn_4, btn_5, btn_6 = buttons
@@ -20,7 +19,7 @@ leds = (Led(2), Led(23), Led(5), Led(4), Led(18), Led(17), Led(16), Led(15))
 led_1, led_2, led_3, led_4, led_5, led_6, led_7, led_8 = leds
 
 gc.collect()
-config = config.loadconfig(CONF_FILE)
+config = config.loadconfig()
 if not config: # use default config if configuration file is corrupted
     config = structures.Configuration()
 
@@ -29,7 +28,7 @@ if btn_1.value(): # button pressed on power up
     # enter configuration mode
     netconnect.startAP(config.AP)
     try:
-        webserver.start(CONF_FILE)
+        webserver.start()
         led.blink_init(*leds, count=5)
         while True:
             webserver.listen()
