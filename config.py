@@ -16,7 +16,6 @@ File is overwritten if profile is saved
 """
 
 from structures import *
-from structures import SEP_IP
 SEP_VAL = ';'
 SEP_ATTR = ':'
 SEL_AP = "AP"

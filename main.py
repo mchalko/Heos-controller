@@ -3,11 +3,11 @@ import led
 from led import Led
 from button import Button
 import time
-import confweb
-import confman
-import fileman
+import webloader
+import webserver
+import config
 import structures
-import netman
+import netconnect
 import gc
 import network
 
@@ -20,22 +20,22 @@ leds = (Led(2), Led(23), Led(5), Led(4), Led(18), Led(17), Led(16), Led(15))
 led_1, led_2, led_3, led_4, led_5, led_6, led_7, led_8 = leds
 
 gc.collect()
-config = fileman.loadconfig(CONF_FILE)
+config = config.loadconfig(CONF_FILE)
 if not config: # use default config if configuration file is corrupted
     config = structures.Configuration()
 
 
 if btn_1.value(): # button pressed on power up
     # enter configuration mode
-    netman.startAP(config.AP)
+    netconnect.startAP(config.AP)
     try:
-        confman.start(CONF_FILE)
+        webserver.start(CONF_FILE)
         led.blink_init(*leds, count=5)
         while True:
-            confman.listen()
+            webserver.listen()
             led.blink_config(*leds)
     except Exception as e:
-        confman.stop()
+        webserver.stop()
         raise e
 else:
     # enter normal mode
@@ -46,11 +46,11 @@ else:
 
     _millis_lastreconnect = 0
     while True:
-        if not netman.isconnected(): # not connected, try reconnect
-            if not(netman.statusWLAN() == network.STAT_CONNECTING or netman.statusETH() == network.STAT_CONNECTING) and time.ticks_diff(time.ticks_ms(), _millis_lastreconnect) > 2000:  # try connecting after the interval
+        if not netconnect.isconnected(): # not connected, try reconnect
+            if not(netconnect.statusWLAN() == network.STAT_CONNECTING or netconnect.statusETH() == network.STAT_CONNECTING) and time.ticks_diff(time.ticks_ms(), _millis_lastreconnect) > 2000:  # try connecting after the interval
                 _millis_lastreconnect = time.ticks_ms()
-                netman.connect(config.WLAN, config.ETH)
-            if netman.statusWLAN() == network.STAT_CONNECTING or netman.statusETH() == network.STAT_CONNECTING:
+                netconnect.connect(config.WLAN, config.ETH)
+            if netconnect.statusWLAN() == network.STAT_CONNECTING or netconnect.statusETH() == network.STAT_CONNECTING:
                 led.blink_connecting(led_7)
         else:
             if not led_7.value() : led_7.on()

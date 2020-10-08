@@ -103,7 +103,7 @@ legend {
     display: flex;
     justify-content: center;
 }
-	
+
 @media screen and (max-width: 600px) {
 .tb_config_l {
     margin-right: 0%;
@@ -230,7 +230,7 @@ legend {
                 <td>Password:</td>
                 <td><input type="password" id="wlan_pass"></td>
               </tr>
-              
+
                 <td>IP configuration : </td>
                 <td><select id="wlan_select" onChange="ipConfSelector('wlan', this.value)">
                     <option value="dhcp">Dhcp</option>
@@ -293,7 +293,7 @@ window.onclick = function(event) {
     popup.style.display = "none";
   }
 };
-function ipConfSelector(type, value){	
+function ipConfSelector(type, value){
 	var state = value == "dhcp";
 	document.getElementById(type.concat("_ip")).disabled = state;
 	document.getElementById(type.concat("_gate")).disabled = state;
@@ -312,14 +312,14 @@ function insertHiddenCell(row, column, value){
 	cell.innerHTML = value;
 	return cell;
 }
-	
+
 function createDelButton(){
 	var button = document.createElement("BUTTON");
 	button.textContent = "Remove";
 	button.onclick = btn_del_click;
 	return button;
 }
-	
+
 function saveClosePopup(){
 	document.getElementById("popup_wlanAdd").style.display = "none";
 	var row = document.getElementById("tb_networks").insertRow(1);
@@ -333,7 +333,7 @@ function saveClosePopup(){
 	if(document.getElementById("wlan_select").value == "dhcp"){
 		insertHiddenCell(row, 5, "");
 	}else{
-		insertHiddenCell(row, 5, document.getElementById("wlan_ip").value + "," 
+		insertHiddenCell(row, 5, document.getElementById("wlan_ip").value + ","
 		+ document.getElementById("wlan_mask").value + ","
 		+ document.getElementById("wlan_gate").value);
 	}
@@ -341,16 +341,16 @@ function saveClosePopup(){
 	for (i = 0; i < inputs.length; i++){
 		inputs[i].value = "";
 	}
-	
+
 }
 
 function reload(){
 	window.location.replace("/");
 }
-		
+
 function sumbit(){
 	var data = new FormData();
-	
+
 	data.append("ap_ssid", document.getElementById("ap_ssid").value);
 	data.append("ap_pass", document.getElementById("ap_pass").value);
 	if(!document.getElementById("ap_ip").value){
@@ -358,14 +358,14 @@ function sumbit(){
 	}else{
 		data.append("ap_net", document.getElementById("ap_ip").value + "," + document.getElementById("ap_mask").value);
 	}
-	
+
 	data.append("eth_en", document.getElementById("eth_en").checked);
 	if (document.getElementById("eth_select").value == "dhcp"){
 		data.append("eth_net", "None");
 	}else{
 		data.append("eth_net", document.getElementById("eth_ip") + ","+document.getElementById("eth_mask")+","+document.getElementById("eth_gate"));
 	}
-	
+
 	data.append("wlan_en", document.getElementById("wlan_en").checked);
 	var table = document.getElementById("tb_networks");
 	var rows = table.getElementsByTagName("TR");
@@ -374,16 +374,16 @@ function sumbit(){
 		var profile = cells[0].innerHTML + ";" + cells[3].innerHTML + ";" + cells[4].innerHTML + ";" + cells[5].innerHTML;
 		data.append("wlan_profile", profile);
 	}
-	
+
 	data.append("heos_name", document.getElementById("heos_name").value);
 	data.append("heos_user", document.getElementById("heos_user").value);
 	data.append("heos_pass", document.getElementById("heos_pass").value);
-	
+
 	var result = "";
-	var xhr = new XMLHttpRequest();  
-    xhr.open("POST", "/config");  
-    xhr.send(data); 
-    xhr.onreadystatechange = function() { 
+	var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/config");
+    xhr.send(data);
+    xhr.onreadystatechange = function() {
       if (xhr.readyState == 4){
 	  	result += "<h3>" +xhr.status + " : " + xhr.statusText + "</h3>";
 		result += "<h3>" + xhr.responseText+"</h3>";
@@ -394,7 +394,8 @@ function sumbit(){
 	  }
     };
 }
-<!-- insert current values here -->
+
+/**--Insert Values Here--**/
 var ap_ssid = "samle";
 var ap_pass = "123456797";
 var ap_net = ["192.168.0.1","255.255.255.0"];
@@ -404,19 +405,19 @@ var heos_name = "Sample";
 var heos_user = "user";
 var heos_pass = "123456";
 var wlan_en = true;
-var ssids = [["sample", "55:44:66:66:66:66", "-50 dBm", "None", "false"],["sample2", "55:44:66:66:66:65", "-40 dBm", "WPA2", "false"]];	
+var ssids = [["sample", "55:44:66:66:66:66", "-50 dBm", "None", "false"],["sample2", "55:44:66:66:66:65", "-40 dBm", "WPA2", "false"]];
 var knownNetworks = [["sample", "123456", "55:44:66:66:66:66","192.168.1.1,255.255.255.0,192.168.1.1" ]];
-<!------------------------------->
-	
+/**--End of block--**/
+
 document.getElementById("ap_ssid").value = ap_ssid;
 document.getElementById("ap_pass").value = ap_pass;
 if(Array.isArray(ap_net)){
 	document.getElementById("ap_ip").value = ap_net[0];
-	document.getElementById("ap_mask").value = ap_net[1];	
+	document.getElementById("ap_mask").value = ap_net[1];
 }
 document.getElementById("eth_en").checked = eth_en;
 ipConfSelector("eth", document.getElementById("eth_select").value = (Array.isArray(eth_net)?"static":"dhcp"));
-if(Array.isArray(eth_net)){	
+if(Array.isArray(eth_net)){
 	document.getElementById("eth_ip").value = eth_net[0];
 	document.getElementById("eth_mask").value = eth_net[1];
 	document.getElementById("eth_gate").value = eth_net[2];
@@ -425,7 +426,7 @@ document.getElementById("wlan_en").checked = wlan_en;
 document.getElementById("heos_name").value = heos_name;
 document.getElementById("heos_user").value = heos_user;
 document.getElementById("heos_pass").value = heos_pass;
-	
+
 var table_networks = document.getElementById("tb_networks");
 for(i = 0; i < knownNetworks.length; i++){
 	var row = table_networks.insertRow(1);
@@ -436,7 +437,7 @@ for(i = 0; i < knownNetworks.length; i++){
 	insertHiddenCell(row, 4, knownNetworks[i][2]);
 	insertHiddenCell(row, 5, knownNetworks[i][3]);
 }
-	
+
 var table_ssid = document.getElementById("tb_ssids");
 for(i = 0; i < ssids.length; i++){
 	var row = table_ssid.insertRow(1);

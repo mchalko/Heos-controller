@@ -1,6 +1,5 @@
 import network
 import machine
-from structures import WLANconfig, ETHconfig, APconfig
 import ubinascii
 
 AUTHMODE = {network.AUTH_OPEN: "open",
@@ -14,7 +13,7 @@ __interface_STA = network.WLAN(network.STA_IF)
 __interface_ETH = network.LAN(mdc=machine.Pin(13), mdio=machine.Pin(14), power=machine.Pin(32), phy_addr=0,
                               phy_type=network.PHY_LAN8720)
 
-def __connectETH(ifconfig=None):
+def connectETH(ifconfig=None):
     """
     initiates connecting to lan network
     once static address is set, if config can't be switched back to dhcp (library bug)
@@ -26,7 +25,7 @@ def __connectETH(ifconfig=None):
     __interface_ETH.active(True)
 
 
-def __connectWLAN(ssid, password, ifconfig=None, bssid=None):
+def connectWLAN(ssid, password, ifconfig=None, bssid=None):
     """
     connects to wifi network
     once static address is set, ip config can't be switched back to dhcp (library bug)
@@ -50,17 +49,17 @@ def connect(wlanconfig = None, ethconfig = None):
     """
 
     if ethconfig and ethconfig.enabled:
-        __connectETH(ethconfig.net.getnet())
+        connectETH(ethconfig.net.getnet())
     if wlanconfig and wlanconfig.enabled:
         networks = discoverAPs()
         for ssid, bssid, rssi, auth, hidden in networks:  # loop through available networks
             for profile in wlanconfig.profiles: # check each known network
                 if profile.ssid == ssid: # ssid match
                     if not profile.bssid : # bssid isn't specified in network profile, connect
-                        __connectWLAN(profile.ssid, profile.password, profile.net.getnet())
+                        connectWLAN(profile.ssid, profile.password, profile.net.getnet())
                         return True
                     elif profile.bssid == bssid: # check if bssid matches
-                        __connectWLAN(profile.ssid, profile.password, profile.net.getnet(), profile.bssid)
+                        connectWLAN(profile.ssid, profile.password, profile.net.getnet(), profile.bssid)
                         return True
 
     return (wlanconfig and wlanconfig.enabled) or (ethconfig and ethconfig.enabled)
@@ -70,8 +69,8 @@ def disconnect():
     """
     deactivates eth and wlan network connections
     """
-
-    __interface_ETH.active(False)
+    if __interface_ETH.active():
+        __interface_ETH.active(False)
     if __interface_STA.active():
         if __interface_STA.isconnected():
             __interface_STA.disconnect()
@@ -81,9 +80,9 @@ def disconnect():
 def status():
     """
     get status of interfaces
-    :return: tuple of statuses: (WLAN status, Ethernet status)
+    :return: tuple of statuses: (WLAN status, Ethernet status, AP status)
     """
-    return (__interface_STA.status(), __interface_ETH.status())
+    return (__interface_STA.status(), __interface_ETH.status(), __interface_AP.status())
 
 def statusWLAN():
     return __interface_STA.status()
