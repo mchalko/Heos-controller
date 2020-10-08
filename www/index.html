@@ -190,6 +190,7 @@ legend {
           <thead>
             <tr>
               <th>SSID</th>
+			  <th>BSSID</th>
               <th>IP config</th>
               <th></th>
             </tr>
@@ -303,14 +304,8 @@ function ipConfSelector(type, value){
 function btn_del_click(e){
 	var table = document.getElementById("tb_networks");
 	var row = e.path.find(elem => elem.tagName == "TR");
+	removeProfile(row.cells[0], row.cells[1]);
 	table.deleteRow(row.rowIndex);
-}
-
-function insertHiddenCell(row, column, value){
-	var cell = row.insertCell(column);
-	cell.style = "display: none;";
-	cell.innerHTML = value;
-	return cell;
 }
 
 function createDelButton(){
@@ -322,35 +317,36 @@ function createDelButton(){
 
 function saveClosePopup(){
 	document.getElementById("popup_wlanAdd").style.display = "none";
-	var row = document.getElementById("tb_networks").insertRow(1);
-	if(document.getElementById("wlan_ssid").value == "" && document.getElementById("wlan_bssid").value == "")
+	
+	if(document.getElementById("wlan_ssid").value == "")
 		return;
+	
+	var row = document.getElementById("tb_networks").insertRow(1);
 	row.insertCell(0).innerHTML = document.getElementById("wlan_ssid").value;
-	row.insertCell(1).innerHTML = document.getElementById("wlan_select").value;
-	row.insertCell(2).appendChild(createDelButton());
-	insertHiddenCell(row, 3, document.getElementById("wlan_pass").value);
-	insertHiddenCell(row, 4, document.getElementById("wlan_bssid").value);
-	if(document.getElementById("wlan_select").value == "dhcp"){
-		insertHiddenCell(row, 5, "");
-	}else{
-		insertHiddenCell(row, 5, document.getElementById("wlan_ip").value + ","
-		+ document.getElementById("wlan_mask").value + ","
-		+ document.getElementById("wlan_gate").value);
-	}
+	row.insertCell(1).innerHTML = document.getElementById("wlan_bssid").value;
+	row.insertCell(2).innerHTML = document.getElementById("wlan_select").value;
+	row.insertCell(3).appendChild(createDelButton());
+	
+	addProfile( document.getElementById("wlan_ssid").value,
+			  document.getElementById("wlan_pass").value,
+			  document.getElementById("wlan_bssid").value,
+			   document.getElementById("wlan_select").value == "dhcp" ? [] : 
+			   [document.getElementById("wlan_ip").value,
+				document.getElementById("wlan_mask").value, 
+				document.getElementById("wlan_gate").value])
+	
 	inputs = document.getElementById("popup_wlanAdd").getElementsByTagName("INPUT");
 	for (i = 0; i < inputs.length; i++){
 		inputs[i].value = "";
 	}
-
 }
 
 function reload(){
 	window.location.replace("/");
 }
-
-function sumbit(){
+	
+function sendConfig(){
 	var data = new FormData();
-
 	data.append("ap_ssid", document.getElementById("ap_ssid").value);
 	data.append("ap_pass", document.getElementById("ap_pass").value);
 	if(!document.getElementById("ap_ip").value){
@@ -367,13 +363,6 @@ function sumbit(){
 	}
 
 	data.append("wlan_en", document.getElementById("wlan_en").checked);
-	var table = document.getElementById("tb_networks");
-	var rows = table.getElementsByTagName("TR");
-	for(i = 1; i < rows.length; i++){
-		var cells = rows[i].getElementsByTagName("TD");
-		var profile = cells[0].innerHTML + ";" + cells[3].innerHTML + ";" + cells[4].innerHTML + ";" + cells[5].innerHTML;
-		data.append("wlan_profile", profile);
-	}
 
 	data.append("heos_name", document.getElementById("heos_name").value);
 	data.append("heos_user", document.getElementById("heos_user").value);
@@ -381,8 +370,6 @@ function sumbit(){
 
 	var result = "";
 	var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/config");
-    xhr.send(data);
     xhr.onreadystatechange = function() {
       if (xhr.readyState == 4){
 	  	result += "<h3>" +xhr.status + " : " + xhr.statusText + "</h3>";
@@ -393,67 +380,96 @@ function sumbit(){
 		document.getElementById("rootDiv").innerHTML = "<div style='text-align: center;'>" + result + "</div>";
 	  }
     };
+	xhr.open("POST", "/set/config");
+    xhr.send(data);
 }
+	
+function setConfig(){
+	var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status == 200){
+		var response = JSON.parse(xhr.responseText)
+		document.getElementById("ap_ssid").value = response.AP.ssid;
+		document.getElementById("ap_pass").value = response.AP.password;
+		document.getElementById("ap_ip").value = response.AP.net[0] ?? "";
+		document.getElementById("ap_mask").value = response.AP.net[1] ?? "";
+	
+		document.getElementById("eth_en").checked = response.ETH.enabled;
+		ipConfSelector("eth", document.getElementById("eth_select").value = (response.ETH.net.length?"static":"dhcp"));
+		document.getElementById("eth_ip").value = response.ETH.net[0] ?? "";
+		document.getElementById("eth_mask").value = response.ETH.net[1] ?? "";
+		document.getElementById("eth_gate").value = response.ETH.net[2] ?? "";
+		
+		document.getElementById("wlan_en").checked = response.WLAN.enabled
+		document.getElementById("heos_name").value = response.HEOS.name;
+		document.getElementById("heos_user").value = response.HEOS.user;
+		document.getElementById("heos_pass").value = response.HEOS.pass;
 
-/**--Insert Values Here--**/
-var ap_ssid = "samle";
-var ap_pass = "123456797";
-var ap_net = ["192.168.0.1","255.255.255.0"];
-var eth_en = true;
-var eth_net = ["192.168.1.1","255.255.255.0","192.168.1.10"];
-var heos_name = "Sample";
-var heos_user = "user";
-var heos_pass = "123456";
-var wlan_en = true;
-var ssids = [["sample", "55:44:66:66:66:66", "-50 dBm", "None", "false"],["sample2", "55:44:66:66:66:65", "-40 dBm", "WPA2", "false"]];
-var knownNetworks = [["sample", "123456", "55:44:66:66:66:66","192.168.1.1,255.255.255.0,192.168.1.1" ]];
-/**--End of block--**/
-
-document.getElementById("ap_ssid").value = ap_ssid;
-document.getElementById("ap_pass").value = ap_pass;
-if(Array.isArray(ap_net)){
-	document.getElementById("ap_ip").value = ap_net[0];
-	document.getElementById("ap_mask").value = ap_net[1];
-}
-document.getElementById("eth_en").checked = eth_en;
-ipConfSelector("eth", document.getElementById("eth_select").value = (Array.isArray(eth_net)?"static":"dhcp"));
-if(Array.isArray(eth_net)){
-	document.getElementById("eth_ip").value = eth_net[0];
-	document.getElementById("eth_mask").value = eth_net[1];
-	document.getElementById("eth_gate").value = eth_net[2];
-}
-document.getElementById("wlan_en").checked = wlan_en;
-document.getElementById("heos_name").value = heos_name;
-document.getElementById("heos_user").value = heos_user;
-document.getElementById("heos_pass").value = heos_pass;
-
-var table_networks = document.getElementById("tb_networks");
-for(i = 0; i < knownNetworks.length; i++){
-	var row = table_networks.insertRow(1);
-	row.insertCell(0).innerHTML = knownNetworks[i][0];
-	row.insertCell(1).innerHTML = (knownNetworks[i][3] ? "static" : "dhcp");
-	row.insertCell(2).appendChild(createDelButton());
-	insertHiddenCell(row, 3, knownNetworks[i][1]);
-	insertHiddenCell(row, 4, knownNetworks[i][2]);
-	insertHiddenCell(row, 5, knownNetworks[i][3]);
-}
-
-var table_ssid = document.getElementById("tb_ssids");
-for(i = 0; i < ssids.length; i++){
-	var row = table_ssid.insertRow(1);
-	for(j = 0; j <ssids[i].length; j++){
-		row.insertCell(j).innerHTML = ssids[i][j];
-	}
-	var createClickHandler = function(crow) {
-      return function() {
-        var cells = crow.getElementsByTagName("TD");
-		document.getElementById("wlan_ssid").value=cells[0].innerHTML;
-		document.getElementById("wlan_bssid").value=cells[1].innerHTML;
-      };
+		var table_networks = document.getElementById("tb_networks");
+		for(i = 0; i < response.WLAN.profiles.length; i++){
+			var row = table_networks.insertRow(1);
+			row.insertCell(0).innerHTML = response.WLAN.profiles[i].ssid;
+			row.insertCell(1).innerHTML = response.WLAN.profiles[i].bssid;
+			row.insertCell(2).innerHTML = response.WLAN.profiles[i].net.length ? "static" : "dhcp";
+			row.insertCell(3).appendChild(createDelButton());
+		}
+	  }
     };
-    row.onclick = createClickHandler(row);
+	xhr.open("POST", "/get/config");
+    xhr.send();
 }
 
+function setWlans(){
+	var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status == 200){
+		var ssids = JSON.parse(xhr.responseText)
+		var table_ssid = document.getElementById("tb_ssids");
+		for(i = 0; i < ssids.length; i++){
+			var row = table_ssid.insertRow(1);
+			for(j = 0; j <ssids[i].length; j++){
+				row.insertCell(j).innerHTML = ssids[i][j];
+			}
+			var createClickHandler = function(crow) {
+			  return function() {
+				var cells = crow.getElementsByTagName("TD");
+				document.getElementById("wlan_ssid").value=cells[0].innerHTML;
+				document.getElementById("wlan_bssid").value=cells[1].innerHTML;
+			  };
+			};
+			row.onclick = createClickHandler(row);
+		}
+	  }
+    };
+	xhr.open("POST", "/get/wlans");
+    xhr.send();
+}
+	
+function addProfile(ssid, password, bssid, config){
+	var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status == 200){
+		
+	  }
+    };
+	xhr.open("POST", "/add/network");
+    xhr.send(JSON.stringify({ssid:ssid, password:password, bssid:bssid, net:config}));
+}
+	
+function removeProfile(ssid, bssid){
+	var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status == 200){
+		
+	  }
+    };
+	xhr.open("POST", "/remove/network");
+    xhr.send(JSON.stringify({ssid:ssid, bssid:bssid}));
+}
+
+setConfig()
+setWlans()
+	
 </script>
 </body>
 </html>
