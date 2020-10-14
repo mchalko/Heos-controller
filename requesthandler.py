@@ -1,7 +1,7 @@
 import httputils
 import structures
 import config
-import ujson
+import json
 
 ATTR_AP_SSID = "ap_ssid"
 ATTR_AP_PASS = "ap_pass"
@@ -27,11 +27,11 @@ def get_update(socket):
 
 
 def post_get_wlans(socket, wlans):
-    httputils.response(socket, ujson.dumps(wlans), type=httputils.TYPE_JSON)
+    httputils.response(socket, json.dumps(wlans), type=httputils.TYPE_JSON)
 
 
 def post_get_config(socket):
-    httputils.response(socket, ujson.dumps(config.loadconfig().todict()), type=httputils.TYPE_JSON)
+    httputils.response(socket, json.dumps(config.loadconfig().todict()), type=httputils.TYPE_JSON)
 
 
 def post_reboot(socket):
@@ -79,7 +79,7 @@ def post_set_config(socket, boundary):
 def post_add_network(socket):
     conf = config.loadconfig()
     try:
-        conf.WLAN.profiles.append(structures.Profile(**ujson.load(socket)))
+        conf.WLAN.profiles.append(structures.Profile(**json.load(socket)))
         config.saveconfig(conf)
         httputils.response(socket)
     except Exception:

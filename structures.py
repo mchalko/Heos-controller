@@ -278,4 +278,5 @@ class Configuration(object):
         return self.__str__()
 
     def todict(self):
-        return {"AP": self.AP.todict(), "ETH": self.ETH.todict(), "WLAN": self.WLAN.todict(), "HEOS": self.HEOS.todict()}
+        return {"AP": self.AP.todict(), "ETH": self.ETH.todict(), "WLAN": self.WLAN.todict(),
+                "HEOS": self.HEOS.todict()}

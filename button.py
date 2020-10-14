@@ -9,6 +9,7 @@ class Button(object):
     """
     Button object with helper functions
     """
+
     def __init__(self, pin):
         from machine import Pin
         import time
@@ -37,7 +38,7 @@ class Button(object):
         self.__startTime = None
 
     @staticmethod
-    def __invoke(methods): # invokes callback
+    def __invoke(methods):  # invokes callback
         for m in methods:
             m()
 
@@ -54,17 +55,18 @@ class Button(object):
             elif not self.pressed and time.ticks_diff(time.ticks_ms(),
                                                       self.__startTime) >= SHORT_PRESS_MS:  # button was just pressed
                 self.pressed = True
-                Button.__invoke(self.__onPress) # call generic press callbacks
-            elif time.ticks_diff(time.ticks_ms(), self.__startTime) >= LONG_PRESS_MS:  # button is being pressed for longer
+                Button.__invoke(self.__onPress)  # call generic press callbacks
+            elif time.ticks_diff(time.ticks_ms(),
+                                 self.__startTime) >= LONG_PRESS_MS:  # button is being pressed for longer
                 self.__hold = True
                 self.__hold_ms = time.ticks_ms()
-                Button.__invoke(self.__onLongPress) # long press callbacks
+                Button.__invoke(self.__onLongPress)  # long press callbacks
             if not self.value():  # button has been released
                 if self.pressed:  # button was pressed for long enough
-                    if not self.__hold: # not a long press
+                    if not self.__hold:  # not a long press
                         Button.__invoke(self.__onShortPress)
-                    Button.__invoke(self.__onRelease) # call release callbacks
-                self.__released() # reset vars
+                    Button.__invoke(self.__onRelease)  # call release callbacks
+                self.__released()  # reset vars
 
     def value(self):
         """

@@ -35,6 +35,7 @@ def blink_config(*leds):
             l.value(not state)
 
 
+Ł
 __blink_connecting_ms = 0
 
 

@@ -11,6 +11,7 @@ TYPE_HTML = "text/html"
 class InvalidHeader(Exception):
     pass
 
+
 def sendpage(socket, file):
     """
     sends web page read from file into a socket
@@ -23,6 +24,7 @@ def sendpage(socket, file):
             if not data:
                 break
             response(socket, data)
+
 
 def response(socket, data="", code=200, type=TYPE_HTML):
     """
@@ -37,6 +39,10 @@ def response(socket, data="", code=200, type=TYPE_HTML):
         socket.send('Content-Type: {}\n'.format(type))
     socket.send('Connection: close\n\n')
 
+    writesocket(socket, data)
+
+
+def writesocket(socket, data, ip="", port=None):
     if data:
         position = 0  # actual position in string
         datalen = len(data)  # total length of data
@@ -45,7 +51,10 @@ def response(socket, data="", code=200, type=TYPE_HTML):
 
         while position < datalen:
             try:
-                sent = socket.send(data[position:])  # sent & get number of bytes successfully sent
+                if ip and port:
+                    sent = socket.sendto(data[position:], (ip, port))
+                else:
+                    sent = socket.send(data[position:])  # sent & get number of bytes successfully sent
                 position += sent
             except OSError as e:
                 if e.args[0] == errno.ECONNRESET:  # connection aborted
@@ -83,11 +92,11 @@ def parseline(line):
     """
     parses line with values of http
     :param line:
-    :return: list [param, [values]]
+    :return: tuple (param, [values])
     """
     parts = line.strip().split(":")  # param and values are separated by :
     if len(parts) > 1:
         param = parts[0].lower()
-        values = "".join(parts[1:]).split(";")  # each value is separated by ;
+        values = ":".join(parts[1:]).split(";")  # each value is separated by ;
         return (param, [v.strip() for v in values])  # remove white spaces for values
     return (None, [])

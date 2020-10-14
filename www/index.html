@@ -349,7 +349,7 @@ function sendConfig(){
 	var data = new FormData();
 	data.append("ap_ssid", document.getElementById("ap_ssid").value);
 	data.append("ap_pass", document.getElementById("ap_pass").value);
-	if(!document.getElementById("ap_ip").value){
+	if(!document.getElementById("ap_ip").value || !document.getElementById("ap_mask").value){
 		data.append("ap_net", "None");
 	}else{
 		data.append("ap_net", document.getElementById("ap_ip").value + "," + document.getElementById("ap_mask").value);
@@ -448,8 +448,8 @@ function setWlans(){
 function addProfile(ssid, password, bssid, config){
 	var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
-      if (xhr.readyState == 4 && xhr.status == 200){
-		
+      if (xhr.readyState == 4 && xhr.status != 200){
+		alert("adding network profile failed");
 	  }
     };
 	xhr.open("POST", "/add/network");
@@ -459,8 +459,8 @@ function addProfile(ssid, password, bssid, config){
 function removeProfile(ssid, bssid){
 	var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
-      if (xhr.readyState == 4 && xhr.status == 200){
-		
+      if (xhr.readyState == 4 && xhr.status != 200){
+		alert("removing network profile failed");
 	  }
     };
 	xhr.open("POST", "/remove/network");

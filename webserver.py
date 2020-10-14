@@ -3,7 +3,6 @@ import gc
 import time
 import machine
 
-import config
 import structures
 import netconnect
 import httputils
@@ -23,7 +22,7 @@ def schedulereboot():
     __resetscheduled_ms = time.ticks_ms()
 
 
-def start(configfile, port=80):
+def start(port=80):
     """
     starts web server
     :param configfile: name of configuration file
@@ -55,7 +54,8 @@ def listen():
     """
     call repeatedly to listen on port for connections and handle them
     """
-    if not __serverSocket:
+    if not __serverSocket: # start automatically on default port
+        start()
         return
     # check whether reboot is pending
     if __resetscheduled_ms is not None:

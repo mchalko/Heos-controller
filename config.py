@@ -1,7 +1,7 @@
 from structures import *
-import ujson
+import json
 
-CONF_FILE = "/device.conf" # default config file
+CONF_FILE = "/device.conf"  # default config file
 __cache = None  # cache to prevent unnecessary loading
 
 
@@ -11,7 +11,7 @@ def saveconfig(config):
     :param config: Configuration object
     """
     with open(CONF_FILE, "w") as f:
-        ujson.dump(config.todict, f)
+        json.dump(config.todict, f)
         global __cache
         __cache = config
 
@@ -28,7 +28,7 @@ def loadconfig(force=False):
 
     try:
         with open(CONF_FILE) as f:
-            config = ujson.load(f)
+            config = Configuration(**json.load(f))
             __cache = config
             return config
     except OSError:  # file doesn't exists
