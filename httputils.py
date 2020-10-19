@@ -95,8 +95,11 @@ def parseline(line):
     :return: tuple (param, [values])
     """
     parts = line.strip().split(":")  # param and values are separated by :
+    param = None
+    values = []
+
+    if len(parts) > 0:
+        param = parts[0].lower().strip()
     if len(parts) > 1:
-        param = parts[0].lower()
         values = ":".join(parts[1:]).split(";")  # each value is separated by ;
-        return (param, [v.strip() for v in values])  # remove white spaces for values
-    return (None, [])
+    return (param, [v.strip() for v in values]) # remove white spaces for values

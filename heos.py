@@ -9,6 +9,7 @@ class Heos(object):
 
 
 class DiscoveryService(object):
+    DEVICE_NAME = ["urn:schemas-denon-com:device:ACT-Denon:1", "urn:schemas-denon-com:device:AiosDevice:1"]
     SSDP_DISCOVERY = ["M-SEARCH * HTTP/1.1",
                       "HOST: 239.255.255.250:1900",
                       "MAN: \"ssdp:discover\"",
@@ -52,29 +53,32 @@ class DiscoveryService(object):
             self.__sendDiscover()
 
         try:
-            data = self.__socket.recv(50)
-            methodNotify = False
-            if data and b"\r\n" in data:
-                method, url, version = httputils.getrequest(data.decode("utf-8").split("\r\n")[0])
-                methodNotify = method.upper() == "NOTIFY"
+            data = self.__socket.recv(512)
+            if not data:
+                return
 
-            while True:  # read the received message
-                line = self.__socket.recv(500)
-                if not line:
-                    break
-                if methodNotify:  # only interested in notify packets
-                    data += line
-            if methodNotify:
-                lines = data.decode("utf-8").split("\r\n")
-                for line in lines:
-                    param, values = httputils.parseline(line)
-                    ip = ""
+            lines = data.decode("utf-8").split("\r\n")
 
-                    if param.upper() == "LOCATION":
-                        try:
-                            ip = re.match("http://(.+):.*", values[0]).group(1)
-                        except Exception:
-                            pass
+            headerparts = lines[0].lower().split(" ")
+            if len(headerparts) != 3 or (headerparts[0] != "notify" and headerparts[1] != "200"):
+                return
+
+            ip = ""
+            valid = False
+
+            for line in lines:
+                param, values = httputils.parseline(line)
+                if param == "location":
+                    try:
+                        ip = re.match("http://(.+):.*", values[0]).group(1)
+                    except Exception: # exception on invalid match
+                        pass
+                elif param == "nt" or param == "st":
+                    if any(d in values for d in self.DEVICE_NAME):
+                        valid = True
+
+            if ip and valid:
+                self.__callondiscover(ip)
 
         except OSError:
             pass
@@ -84,16 +88,16 @@ class DiscoveryService(object):
     def ondiscover(self, callback):
         """
         add on discover callback. If callback is None removes all existing callbacks
-        :param callback: function that takes one param discovered ip - foo(ip)
+        :param callback: function that takes one param discovered ip - foo("ip")
         """
         if not callback:
             self.__onDiscover.clear()
         else:
             self.__onDiscover.append(callback)
 
-    def __callondiscover(self):
+    def __callondiscover(self, ip):
         """
         call discovery callbacks
         """
         for callback in self.__onDiscover:
-            callback()
+            callback(ip)
