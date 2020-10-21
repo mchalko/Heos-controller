@@ -2,6 +2,9 @@ import httputils
 import structures
 import config
 import json
+import os
+
+from boot import FILE_UPDATE, FOLDER_UPDATE
 
 ATTR_AP_SSID = "ap_ssid"
 ATTR_AP_PASS = "ap_pass"
@@ -14,8 +17,10 @@ ATTR_HEOS_NAME = "heos_name"
 ATTR_HEOS_USER = "heos_user"
 ATTR_HEOS_PASS = "heos_pass"
 
-FILE_WEB_ROOT = "/www/index.html"
-FILE_WEB_UPDATE = "/www/update.html"
+FOLDER_WEB = "/www/"
+FILE_WEB_ROOT = FOLDER_WEB + "index.html"
+FILE_WEB_UPDATE = FOLDER_WEB + "update.html"
+
 
 
 def get_root(socket):
@@ -38,7 +43,7 @@ def post_reboot(socket):
     httputils.response(socket, "Rebooting")
 
 
-def post_set_config(socket, boundary):
+def post_set_config(socket):
     conf = config.loadconfig()
     try:
         while True:  # read the post data
@@ -89,7 +94,7 @@ def post_add_network(socket):
 def post_remove_network(socket):
     conf = config.loadconfig()
     try:
-        toDelete = ujson.load(socket)
+        toDelete = json.load(socket)
         for i, profile in enumerate(conf.WLAN.profiles):
             if profile.ssid == toDelete["ssid"]:
                 if not toDelete["bssid"] or toDelete["bssid"] == profile.bssid:
@@ -104,7 +109,12 @@ def post_update_submit(socket, boundary):
     fileWritten = False  # something received
     inFile = False  # reading file
     toWrite = None  # buffer for line to write
-    file = open("update/update.zip", "wb")  # create, open file for storing update
+
+    try:
+        os.mkdir(FOLDER_UPDATE)
+    except OSError:
+        pass
+    file = open(FILE_UPDATE, "wb")  # create, open file for storing update
 
     while True:  # read the post data
         line = socket.readline(512)
@@ -129,7 +139,7 @@ def post_update_submit(socket, boundary):
             toWrite = line  # set to write in the next cycle
             continue
 
-        param, values = httputils.parseline(line)
+        param, values = httputils.parseline(line.decode("utf-8"))
         if param == "content-disposition" and any("filename" in val for val in values):
             while True:
                 line = socket.readline()
@@ -137,4 +147,5 @@ def post_update_submit(socket, boundary):
                     break
             inFile = True
     file.close()
+    httputils.response(socket)
     return fileWritten

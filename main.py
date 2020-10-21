@@ -18,11 +18,9 @@ btn_1, btn_2, btn_3, btn_4, btn_5, btn_6 = buttons
 leds = (Led(2), Led(23), Led(5), Led(4), Led(18), Led(17), Led(16), Led(15))
 led_1, led_2, led_3, led_4, led_5, led_6, led_7, led_8 = leds
 
+device_config = config.loadconfig()  # load device config from memory
 heos_discovery = DiscoveryService()
-heos_device = Heos()
-
-device_config = structures.Configuration()
-
+heos_device = Heos(device_config.HEOS)
 
 def config_mode():
     led.blink_init(*leds, count=5)
@@ -139,10 +137,6 @@ def normal_mode():
 
 # startup code
 gc.collect()  # collect previous garbage
-device_config = config.loadconfig()  # load device config from memory
-if not device_config:  # use default config if configuration file is corrupted
-    device_config = structures.Configuration()
-
 if btn_1.value():  # button pressed on power up
     config_mode()  # enter configuration mode
 else:

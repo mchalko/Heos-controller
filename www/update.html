@@ -5,9 +5,29 @@
     <title>Upload new firmware</title>
 </head>
 <body>
-<form id="upload" enctype="multipart/form-data" method="post" action="/update/submit">
+<div id="rootDiv">
+<form id="upload" enctype="multipart/form-data" >
    <input id="fileupload" name="myfile" type="file" />
-   <input type="submit" value="submit" id="submit" />
+   <button id="btn_save" onClick="submit()">Apply</button>
 </form>
+</div>
+<script>
+
+function submit(){
+    var data = new FormData(document.getElementById("upload"));
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4){
+	var result = "<h3>" +xhr.status + " : " + xhr.statusText + "</h3>";
+	result += "<h3>" + xhr.responseText+"</h3>";
+	result += "<button onclick='reload()'>Reload</button>";
+	document.getElementById("rootDiv").innerHTML = "<div style='text-align: center;'>" + result + "</div>";
+        }
+    };
+    xhr.open("POST", "/update/submit");
+    xhr.send(data);
+}
+</script>
 </body>
 </html>
+

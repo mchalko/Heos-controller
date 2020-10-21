@@ -19,11 +19,16 @@ def sendpage(socket, file):
     :param file: file name
     """
     with open(file, "r") as f:
+        response(socket, "")
         while True:
-            data = file.read(512)
-            if not data:
+            try:
+                chunk = f.read(512)
+            except OSError:
                 break
-            response(socket, data)
+            if not chunk:
+                break
+            writesocket(socket, chunk)
+
 
 
 def response(socket, data="", code=200, type=TYPE_HTML):
@@ -34,12 +39,15 @@ def response(socket, data="", code=200, type=TYPE_HTML):
     :param code: response code
     :param type: type of data
     """
-    socket.send('HTTP/1.1 {} {}\n'.format(code, HTTP_CODES[code]))
-    if data:
-        socket.send('Content-Type: {}\n'.format(type))
-    socket.send('Connection: close\n\n')
 
-    writesocket(socket, data)
+    header = 'HTTP/1.1 {} {}\r\n'.format(code, HTTP_CODES[code])
+    if data:
+        header += 'Content-Type: {}\r\n'.format(type)
+    header += 'Connection: close\r\n\r\n'
+
+    writesocket(socket, header)
+    if data:
+        writesocket(socket, data)
 
 
 def writesocket(socket, data, ip="", port=None):
@@ -73,7 +81,7 @@ def getrequest(line):
     if not line:  # blank line
         raise InvalidHeader
 
-    header = line.decode('utf-8').strip()  # remove white chars and decode
+    header = line.strip()  # remove white chars and decode
     if not header:
         raise InvalidHeader
 

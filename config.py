@@ -11,7 +11,7 @@ def saveconfig(config):
     :param config: Configuration object
     """
     with open(CONF_FILE, "w") as f:
-        json.dump(config.todict, f)
+        json.dump(config.todict(), f)
         global __cache
         __cache = config
 
@@ -33,3 +33,4 @@ def loadconfig(force=False):
             return config
     except OSError:  # file doesn't exists
         return Configuration()
+

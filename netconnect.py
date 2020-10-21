@@ -99,6 +99,18 @@ def statusETH():
     return __interface_ETH.status()
 
 
+def addrAP():
+    return __interface_AP.ifconfig()
+
+
+def addrWLAN():
+    return __interface_STA.ifconfig()
+
+
+def addrETH():
+    return __interface_ETH.ifconfig()
+
+
 def isconnected():
     """
 

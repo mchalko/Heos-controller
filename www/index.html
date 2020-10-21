@@ -276,7 +276,7 @@ legend {
         </table>
       </fieldset>
       <div class="centreDiv">
-        <button id="btn_save" onClick="sumbit()">Apply & reboot</button>
+        <button id="btn_save" onClick="sendConfig()">Apply</button>
       </div>
     </div>
     <div id="footer">ReCo</div>
@@ -317,24 +317,24 @@ function createDelButton(){
 
 function saveClosePopup(){
 	document.getElementById("popup_wlanAdd").style.display = "none";
-	
+
 	if(document.getElementById("wlan_ssid").value == "")
 		return;
-	
+
 	var row = document.getElementById("tb_networks").insertRow(1);
 	row.insertCell(0).innerHTML = document.getElementById("wlan_ssid").value;
 	row.insertCell(1).innerHTML = document.getElementById("wlan_bssid").value;
 	row.insertCell(2).innerHTML = document.getElementById("wlan_select").value;
 	row.insertCell(3).appendChild(createDelButton());
-	
+
 	addProfile( document.getElementById("wlan_ssid").value,
 			  document.getElementById("wlan_pass").value,
 			  document.getElementById("wlan_bssid").value,
-			   document.getElementById("wlan_select").value == "dhcp" ? [] : 
+			   document.getElementById("wlan_select").value == "dhcp" ? [] :
 			   [document.getElementById("wlan_ip").value,
-				document.getElementById("wlan_mask").value, 
+				document.getElementById("wlan_mask").value,
 				document.getElementById("wlan_gate").value])
-	
+
 	inputs = document.getElementById("popup_wlanAdd").getElementsByTagName("INPUT");
 	for (i = 0; i < inputs.length; i++){
 		inputs[i].value = "";
@@ -344,7 +344,7 @@ function saveClosePopup(){
 function reload(){
 	window.location.replace("/");
 }
-	
+
 function sendConfig(){
 	var data = new FormData();
 	data.append("ap_ssid", document.getElementById("ap_ssid").value);
@@ -376,14 +376,16 @@ function sendConfig(){
 		result += "<h3>" + xhr.responseText+"</h3>";
 		if (xhr.status != 200){
 			result += "<button onclick='reload()'>Go back</button>";
-		}
+		}else{
+                        result += "<button onclick='sendReboot()'>Reboot</button>";
+                }
 		document.getElementById("rootDiv").innerHTML = "<div style='text-align: center;'>" + result + "</div>";
 	  }
     };
 	xhr.open("POST", "/set/config");
     xhr.send(data);
 }
-	
+
 function setConfig(){
 	var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
@@ -393,17 +395,17 @@ function setConfig(){
 		document.getElementById("ap_pass").value = response.AP.password;
 		document.getElementById("ap_ip").value = response.AP.net[0] ?? "";
 		document.getElementById("ap_mask").value = response.AP.net[1] ?? "";
-	
+
 		document.getElementById("eth_en").checked = response.ETH.enabled;
 		ipConfSelector("eth", document.getElementById("eth_select").value = (response.ETH.net.length?"static":"dhcp"));
 		document.getElementById("eth_ip").value = response.ETH.net[0] ?? "";
 		document.getElementById("eth_mask").value = response.ETH.net[1] ?? "";
 		document.getElementById("eth_gate").value = response.ETH.net[2] ?? "";
-		
+
 		document.getElementById("wlan_en").checked = response.WLAN.enabled
 		document.getElementById("heos_name").value = response.HEOS.name;
 		document.getElementById("heos_user").value = response.HEOS.user;
-		document.getElementById("heos_pass").value = response.HEOS.pass;
+		document.getElementById("heos_pass").value = response.HEOS.password;
 
 		var table_networks = document.getElementById("tb_networks");
 		for(i = 0; i < response.WLAN.profiles.length; i++){
@@ -420,9 +422,10 @@ function setConfig(){
 }
 
 function setWlans(){
-	var xhr = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
       if (xhr.readyState == 4 && xhr.status == 200){
+                console.log(xhr.responseText)
 		var ssids = JSON.parse(xhr.responseText)
 		var table_ssid = document.getElementById("tb_ssids");
 		for(i = 0; i < ssids.length; i++){
@@ -444,7 +447,7 @@ function setWlans(){
 	xhr.open("POST", "/get/wlans");
     xhr.send();
 }
-	
+
 function addProfile(ssid, password, bssid, config){
 	var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
@@ -455,7 +458,7 @@ function addProfile(ssid, password, bssid, config){
 	xhr.open("POST", "/add/network");
     xhr.send(JSON.stringify({ssid:ssid, password:password, bssid:bssid, net:config}));
 }
-	
+
 function removeProfile(ssid, bssid){
 	var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
@@ -467,9 +470,25 @@ function removeProfile(ssid, bssid){
     xhr.send(JSON.stringify({ssid:ssid, bssid:bssid}));
 }
 
+function sendReboot(){
+	var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status != 200){
+		alert("Reboot failed");
+	  }else if (xhr.readyState == 4 && xhr.status == 200){
+                result += "<h3>" +xhr.status + " : " + xhr.statusText + "</h3>";
+		result += "<h3>Reboot successful</h3>";
+		result += "<button onclick='reload()'>Go back</button>";
+                document.getElementById("rootDiv").innerHTML = "<div style='text-align: center;'>" + result + "</div>";
+        }
+    };
+	xhr.open("POST", "/reboot");
+    xhr.send();
+}
+
 setConfig()
 setWlans()
-	
+
 </script>
 </body>
 </html>

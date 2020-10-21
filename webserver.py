@@ -79,13 +79,16 @@ def listen():
 
         try:
             boundary = ""
-            method, path, version = httputils.getrequest(client.readline())  # first line contains the important stuff
+            line = client.readline()
+            if not line :
+                return
+            method, path, version = httputils.getrequest(line.decode('utf-8'))  # first line contains the important stuff
             while True:  # read the rest of the received http message
                 line = client.readline()
                 if not line or line == b"\r\n":
                     break
                 if method == "POST":  # try to get form boundary from post method
-                    param, values = httputils.parseline(line)
+                    param, values = httputils.parseline(line.decode('utf-8'))
                     if param == "content-type":
                         if values[0].lower() == "multipart/form-data" and len(values) > 1:
                             boundary = values[1].replace("boundary=", "")
@@ -124,3 +127,4 @@ def listen():
             client.close()  # close the client socket
     except OSError:
         pass  # ignore
+
