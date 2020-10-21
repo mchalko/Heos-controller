@@ -28,14 +28,13 @@ __blink_config_ms = 0
 def blink_config(*leds):
     global __blink_config_ms
 
-    if time.ticks_diff(time.ticks_ms(), __blink_config_ms) >= 200:
+    if time.ticks_diff(time.ticks_ms(), __blink_config_ms) >= 1000:
         __blink_config_ms = time.ticks_ms()
         state = leds[0].value()
         for l in leds:
             l.value(not state)
 
 
-Ł
 __blink_connecting_ms = 0
 
 

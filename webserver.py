@@ -34,6 +34,7 @@ def start(port=80):
         stop()
 
     __serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    __serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     __serverSocket.bind(('', port))
     __serverSocket.listen(1)  # number of connections allowed
     __serverSocket.setblocking(False)  # do not actively wait
