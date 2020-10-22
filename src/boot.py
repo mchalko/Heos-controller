@@ -1,5 +1,6 @@
 import utarfile
 import os
+import machine
 
 FOLDER_UPDATE = "/update/"
 FILE_UPDATE = FOLDER_UPDATE + "update.tar"
@@ -20,7 +21,7 @@ def deleteFiles(folder=""):
 
 try:
     file_update = utarfile.TarFile(FILE_UPDATE)  # file exists
-    next(file_update)  # exception is thrown on invalid tar file
+    for f in file_update : pass  # iterate through tar entire file, exception is thrown if it is invalid
     file_update = utarfile.TarFile(FILE_UPDATE)  # reset file if no exception was thrown
 
     deleteFiles("/") # delete all current files
@@ -40,5 +41,6 @@ try:
                         break
                     discFile.write(chunk)
     os.remove(FILE_UPDATE)  # delete the update file
-except Exception:  # do nothing if file something went wrong
+    machine.reset() # reset
+except Exception:  # do nothing if something went wrong
     pass

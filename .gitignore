@@ -1,2 +1,4 @@
 .idea
+build
+*.tar
 __pycache__
