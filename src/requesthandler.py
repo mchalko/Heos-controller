@@ -3,7 +3,8 @@ import structures
 import config
 import json
 import os
-
+from led import Led
+import led
 from boot import FILE_UPDATE, FOLDER_UPDATE
 
 ATTR_AP_SSID = "ap_ssid"
@@ -21,7 +22,7 @@ FOLDER_WEB = "/www/"
 FILE_WEB_ROOT = FOLDER_WEB + "index.html"
 FILE_WEB_UPDATE = FOLDER_WEB + "update.html"
 
-
+leds = (Led(2), Led(23), Led(5), Led(4), Led(18), Led(17))
 
 def get_root(socket):
     httputils.sendfromfile(socket, FILE_WEB_ROOT)
@@ -109,18 +110,16 @@ def post_update_submit(socket, boundary):
     fileWritten = False  # something received
     inFile = False  # reading file
     toWrite = None  # buffer for line to write
-
     try:
-        os.mkdir(FOLDER_UPDATE)
+        os.mkdir(FOLDER_UPDATE.rstrip('/'))
     except OSError:
         pass
     file = open(FILE_UPDATE, "wb")  # create, open file for storing update
-
     while True:  # read the post data
-        line = socket.readline(512)
+        line = socket.readline(1024)
         if not line:  # finish reading
             break
-
+        led.blink_connecting(*leds)
         try:
             if boundary in line.decode("utf-8"):
                 inFile = False
@@ -148,4 +147,8 @@ def post_update_submit(socket, boundary):
             inFile = True
     file.close()
     httputils.response(socket)
+    for l in leds:
+        l.off()
     return fileWritten
+
+

@@ -1,32 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>Upload new firmware</title>
+    <style>
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
 </head>
 <body>
 <div id="rootDiv">
 <form id="upload" enctype="multipart/form-data" >
    <input id="fileupload" name="myfile" type="file" />
-   <button id="btn_save" onClick="submit()">Apply</button>
 </form>
+   <button id="btn_save" onClick="sendFile()">Apply</button>
 </div>
 <script>
 
-function submit(){
+function sendFile(){
     var data = new FormData(document.getElementById("upload"));
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4){
+    if (xhr.readyState == 4 && xhr.status == 200){
 	var result = "<h3>" +xhr.status + " : " + xhr.statusText + "</h3>";
 	result += "<h3>" + xhr.responseText+"</h3>";
-	result += "<button onclick='reload()'>Reload</button>";
+	result += "<button onclick='sendReboot()'>Reboot</button>";
 	document.getElementById("rootDiv").innerHTML = "<div style='text-align: center;'>" + result + "</div>";
-        }
+        }else if (xhr.readyState == 4 && xhr.status != 200){
+          var result = "<h3>Something went wrong</h3>";
+	document.getElementById("rootDiv").innerHTML = "<div style='text-align: center;'>" + result + "</div>";
+          }
     };
     xhr.open("POST", "/update/submit");
     xhr.send(data);
+    document.getElementById("rootDiv").innerHTML = '<div style="text-align: center;" class="loader"></div>';
 }
+
+function sendReboot(){
+	var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status != 200){
+		alert("Reboot failed");
+	  }else if (xhr.readyState == 4 && xhr.status == 200){
+                result += "<h3>" +xhr.status + " : " + xhr.statusText + "</h3>";
+		result += "<h3>Reboot successful</h3>";
+		result += "<button onclick='reload()'>Go back</button>";
+                document.getElementById("rootDiv").innerHTML = "<div style='text-align: center;'>" + result + "</div>";
+        }
+    };
+	xhr.open("POST", "/reboot");
+    xhr.send();
+}
+
 </script>
 </body>
 </html>
