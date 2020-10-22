@@ -22,8 +22,8 @@ device_config = config.loadconfig()  # load device config from memory
 heos_discovery = DiscoveryService()
 heos_device = Heos(device_config.HEOS)
 
-def config_mode():
-    led.blink_init(*leds, count=5)
+def config_mode(): #
+    led.blink_init(*leds, count=5) # signal entering config
     netconnect.startAP(config.AP)
     try:
         webserver.start()
@@ -35,14 +35,14 @@ def config_mode():
         raise e
 
 
-def heos_ondiscover(ip):
+def heos_ondiscover(ip): # stop discovery and start heos connection
     global heos_device
     global heos_discovery
     heos_discovery.stop()
     heos_device.start(ip)
 
 
-def heos_ondisconnect():
+def heos_ondisconnect(): # clear previous heos connection
     global heos_device
     heos_device.stop()
 
@@ -94,23 +94,21 @@ button_shortpress_cb = (sw1_shortpress, sw2_shortpress, sw3_shortpress, sw4_shor
 button_longpress_cb = (sw1_longpress, sw2_longpress, sw3_longpress, sw4_longpress, None, None)
 button_hold_cb = (None, None, None, None, sw5_onhold, sw6_onhold)
 
-
-
 def normal_mode():
     led.blink_init(*leds, count=2)
+    # init button callbacks
     for i, b in enumerate(buttons):  # button handler
         b.onpress(lambda i=i: leds[i].on())
         b.onrelease(lambda i=i: leds[i].off())
         if button_shortpress_cb[i] : b.onpress(button_shortpress_cb[i])
         if button_longpress_cb[i] : b.onlongpress(button_longpress_cb[i])
         if button_hold_cb[i] : b.onhold(button_hold_cb[i])
-
+    # init heos callbacks
     heos_discovery.ondiscover(heos_ondiscover)
     heos_device.ondisconnect(heos_ondisconnect)
 
     millis_lastreconnect = 0
     while True:
-
         if not netconnect.isconnected():  # not connected, try reconnect
             if not (netconnect.statusWLAN() == network.STAT_CONNECTING or netconnect.statusETH() == network.STAT_CONNECTING) and time.ticks_diff(
                     time.ticks_ms(), millis_lastreconnect) > 2000:  # try connecting after the interval
@@ -118,18 +116,19 @@ def normal_mode():
                 netconnect.connect(config.WLAN, config.ETH)
             if netconnect.statusWLAN() == network.STAT_CONNECTING or netconnect.statusETH() == network.STAT_CONNECTING:
                 led.blink_connecting(led_7)
-        else:
-            if not led_7.value():
+        else: # connected
+            if not led_7.value(): # signal stable network connection
                 led_7.on()
 
-            if not heos_device.getconnection():
-                heos_discovery.discover()
-            else:
+            if not heos_device.getconnection(): # not connected nor connecting to heos
+                heos_discovery.discover() # discover heos devices on network
+            else: # heos connected or connecting
                 heos_device.run()
-                for b in buttons:
-                    b.update()
 
-            if not heos_device.issigned():
+            for b in buttons: # update button states
+                b.update()
+
+            if not heos_device.issigned(): # signal signed status of heos device
                 led.blink_connecting(led_8)
             elif not led_8.value():
                 led_8.on()
