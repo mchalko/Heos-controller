@@ -12,14 +12,14 @@ class InvalidHeader(Exception):
     pass
 
 
-def sendpage(socket, file):
+def sendfromfile(socket, file):
     """
     sends web page read from file into a socket
     :param socket: client socket
     :param file: file name
     """
     with open(file, "r") as f:
-        response(socket, "")
+        response(socket, "") # send response header
         while True:
             try:
                 chunk = f.read(512)
@@ -27,13 +27,13 @@ def sendpage(socket, file):
                 break
             if not chunk:
                 break
-            writesocket(socket, chunk)
+            writesocket(socket, chunk) # send file content
 
 
 
 def response(socket, data="", code=200, type=TYPE_HTML):
     """
-    sends response with data to socket
+    sends response with optional data to socket
     :param socket: client socket
     :param data: string to send
     :param code: response code
@@ -51,6 +51,13 @@ def response(socket, data="", code=200, type=TYPE_HTML):
 
 
 def writesocket(socket, data, ip="", port=None):
+    """
+    sends data to socket
+    :param socket: socket
+    :param data: data to send
+    :param ip: optional destination ip if socket is not bound
+    :param port:  optional port if socket is not bound
+    """
     if data:
         position = 0  # actual position in string
         datalen = len(data)  # total length of data
@@ -72,10 +79,10 @@ def writesocket(socket, data, ip="", port=None):
         poll.unregister(socket)
 
 
-def getrequest(line):
+def gethttprequest(line):
     """
     parses first line of http header - request line
-    :param line:
+    :param line: string with line to parse
     :return: list [method, url, version]
     """
     if not line:  # blank line
@@ -98,7 +105,7 @@ def getrequest(line):
 
 def parseline(line):
     """
-    parses line with values of http
+    parses line with header values of http
     :param line:
     :return: tuple (param, [values])
     """

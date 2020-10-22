@@ -6,6 +6,10 @@ FILE_UPDATE = FOLDER_UPDATE + "update.tar"
 
 
 def deleteFiles(folder=""):
+    """
+    delete all files in given folder
+    :param folder: folder with files
+    """
     for file in os.listdir(folder):
         try:
             os.remove(file)  # try removing as file
@@ -36,5 +40,5 @@ try:
                         break
                     discFile.write(chunk)
     os.remove(FILE_UPDATE)  # delete the update file
-except Exception:  # do nothing if file doesn't exists
+except Exception:  # do nothing if file something went wrong
     pass

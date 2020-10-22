@@ -82,7 +82,7 @@ def listen():
             line = client.readline()
             if not line :
                 return
-            method, path, version = httputils.getrequest(line.decode('utf-8'))  # first line contains the important stuff
+            method, path, version = httputils.gethttprequest(line.decode('utf-8'))  # first line contains the important stuff
             while True:  # read the rest of the received http message
                 line = client.readline()
                 if not line or line == b"\r\n":

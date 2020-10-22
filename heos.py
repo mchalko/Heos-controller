@@ -14,10 +14,10 @@ class Heos(object):
     COMMAND_GETSTATE = ("player/get_play_state", {"pid": ""})
 
     HEOS_PORT = 1255
-
+    # private default callbacks
     __CMD_CONNECTED_CB = "_connect"
     __CMD_DISCONNECTED_CB = "_disconnect"
-
+    # connection types
     CONNECTION_NOT_CONNECTED = 0
     CONNECTION_CONNECTING = 1
     CONNECTION_CONNECTED = 2
@@ -27,9 +27,9 @@ class Heos(object):
         :param config: Heosconfig containing user, password and heos name
         :param interval: interval for periodic sending of commands
         """
-        self.__config = structures.Heosconfig()  # config
+        self.__config = config
         self.__interval = interval
-        self.__timeout = interval * 3
+        self.__timeout = interval * 3 # after timeout heos is considered dead
         self.__callbacks = {}
         self.__socket = None
 
@@ -69,12 +69,12 @@ class Heos(object):
         initialize communication with the device
         """
         if self.__socket is None:
-            self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create UDP socket
-            self.__socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create TCP socket
+            self.__socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # reuse address, to prevent errors on reboot
             self.__socket.connect((ip, self.HEOS_PORT))  # listen on heos telnet port for responses
             self.__socket.setblocking(False)  # do not actively wait
             self.__connection = Heos.CONNECTION_CONNECTING
-            self.__lastCmdRecieved = time.ticks_ms()  # set timeout marker
+            self.__lastCmdRecieved = time.ticks_ms()  # set start time
 
     def stop(self):
         """
@@ -90,11 +90,11 @@ class Heos(object):
         run baseline communication with heos device
         should be called in loop
         """
-        if not self.__socket:
+        if not self.__socket: # if not started do nothing
             return
 
         try:
-            data = self.__socket.recv(2048)
+            data = self.__socket.recv(2048) # recieve max 2kB of data from socket (if bigger other data are lost)
             if data:
                 datajson = json.loads(data)
                 command = datajson["heos"]["command"]
@@ -115,7 +115,7 @@ class Heos(object):
                         self.__status = data["heos"]["message"].split("state=", 1)[1]
                 if command in self.__callbacks:
                     self.__callCallback(command, datajson)
-        except OSError:
+        except OSError: # do nothing if socket can't be read
             pass
 
         if time.ticks_diff(time.ticks_ms(), self.__lastCmdRecieved) > self.__timeout:  # watch out for timeout
@@ -161,6 +161,12 @@ class Heos(object):
 
     @staticmethod
     def formatcmd(command, **kwargs):
+        """
+        formats heos command - adds attributes
+        :param command: heos command
+        :param kwargs: attributes
+        :return complete command
+        """
         for k, v in kwargs.items():
             if k in command[1]:
                 command[k] = v
@@ -223,6 +229,7 @@ class Heos(object):
 
 
 class DiscoveryService(object):
+    # names of heos
     DEVICE_NAME = ["urn:schemas-denon-com:device:ACT-Denon:1", "urn:schemas-denon-com:device:AiosDevice:1"]
     SSDP_DISCOVERY = ["M-SEARCH * HTTP/1.1",
                       "HOST: 239.255.255.250:1900",
@@ -246,6 +253,9 @@ class DiscoveryService(object):
         self.__lastDiscover = 0
 
     def __sendDiscover(self):
+        """
+        sends discover packet
+        """
         httputils.writesocket(self.__socket, '\r\n'.join(self.SSDP_DISCOVERY), self.SSDP_ADDR, self.SSDP_PORT)
 
     def start(self):
@@ -275,41 +285,41 @@ class DiscoveryService(object):
          should be called in a loop
         """
         if not self.__socket:
-            self.start()
+            self.start() # start automatically
             return
 
-        if time.ticks_diff(time.ticks_ms(), self.__lastDiscover) > self.__interval:
+        if time.ticks_diff(time.ticks_ms(), self.__lastDiscover) > self.__interval: # send discover
             self.__lastDiscover = time.ticks_ms()
             self.__sendDiscover()
 
         try:
-            data = self.__socket.recv(512)
+            data = self.__socket.recv(512) # get only 512B of data from socket
             if not data:
                 return
 
             lines = data.decode("utf-8").split("\r\n")
 
-            headerparts = lines[0].lower().split(" ")
+            headerparts = lines[0].lower().split(" ") # first line contains header
             if len(headerparts) != 3 or (headerparts[0] != "notify" and headerparts[1] != "200"):
-                return
+                return # invalid header reciever - ignore
 
             ip = ""
             valid = False
 
             for line in lines:
                 param, values = httputils.parseline(line)
-                if param == "location":
+                if param == "location": # get ip address
                     try:
                         ip = re.match("http://(.+):.*", values[0]).group(1)
-                    except Exception:  # exception on invalid match
+                    except Exception:  # catch exception on invalid match
                         pass
                 elif param == "nt" or param == "st":
                     if any(d in values for d in self.DEVICE_NAME):
-                        valid = True
+                        valid = True # device found
 
             if ip and valid:
                 self.__callondiscover(ip)
-        except OSError:
+        except OSError: # do nothing if socket is empty
             pass
 
     def ondiscover(self, callback):

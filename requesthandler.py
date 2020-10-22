@@ -24,11 +24,11 @@ FILE_WEB_UPDATE = FOLDER_WEB + "update.html"
 
 
 def get_root(socket):
-    httputils.sendpage(socket, FILE_WEB_ROOT)
+    httputils.sendfromfile(socket, FILE_WEB_ROOT)
 
 
 def get_update(socket):
-    httputils.sendpage(socket, FILE_WEB_UPDATE)
+    httputils.sendfromfile(socket, FILE_WEB_UPDATE)
 
 
 def post_get_wlans(socket, wlans):
