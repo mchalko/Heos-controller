@@ -1,0 +1,1 @@
+pip3 install adafruit-ampy htmlmin BeautifulSoup4 csscompressor rjsmin pyminifier
