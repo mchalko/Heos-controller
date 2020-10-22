@@ -110,6 +110,11 @@ def addrWLAN():
 def addrETH():
     return __interface_ETH.ifconfig()
 
+def isconnectingETH():
+    return statusETH() == network.STAT_CONNECTING
+
+def isconnectingWLAN():
+    return statusWLAN() == network.STAT_CONNECTING
 
 def isconnected():
     """

@@ -113,8 +113,8 @@ def normal_mode():
             if not (netconnect.statusWLAN() == network.STAT_CONNECTING or netconnect.statusETH() == network.STAT_CONNECTING) and time.ticks_diff(
                     time.ticks_ms(), millis_lastreconnect) > 2000:  # try connecting after the interval
                 millis_lastreconnect = time.ticks_ms()
-                netconnect.connect(config.WLAN, config.ETH)
-            if netconnect.statusWLAN() == network.STAT_CONNECTING or netconnect.statusETH() == network.STAT_CONNECTING:
+                netconnect.connect(device_config.WLAN, device_config.ETH)
+            if netconnect.isconnectingWLAN() or netconnect.isconnectingETH():
                 led.blink_connecting(led_7)
         else: # connected
             if not led_7.value(): # signal stable network connection

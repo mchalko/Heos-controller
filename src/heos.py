@@ -202,7 +202,7 @@ class Heos(object):
         When callback is None removes all callbacks
         :param callback: function without parameters - foo()
         """
-        self.oncommand(self._DISCONN, callback)
+        self.oncommand(self.__CMD_DISCONNECTED_CB, callback)
 
     def onconnect(self, callback):
         """
@@ -210,7 +210,7 @@ class Heos(object):
         When callback is None removes all callbacks
         :param callback: function without parameters - foo()
         """
-        self.oncommand(self._CONN, callback)
+        self.oncommand(self.__CMD_CONNECTED_CB, callback)
 
     def oncommand(self, command, callback):
         """
