@@ -24,7 +24,7 @@ heos_device = Heos(device_config.HEOS)
 
 def config_mode(): #
     led.blink_init(*leds, count=5) # signal entering config
-    netconnect.startAP(config.AP)
+    netconnect.startAP(device_config.AP)
     try:
         webserver.start()
         while True:
