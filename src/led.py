@@ -21,10 +21,10 @@ class Led(object):
         :param state: new state or None
         :return: led state if param state is None
         """
-        if not state:
+        if state is None:
             return not self.__pin.value()
         else:
-            self.__pin.value(state)
+            self.__pin.value(not state) # led is has inverted logic
 
 
 __blink_config_ms = 0

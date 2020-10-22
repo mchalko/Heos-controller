@@ -29,7 +29,7 @@ def config_mode(): #
         webserver.start()
         while True:
             webserver.listen()
-            led.blink_config(*leds)
+            led.blink_connecting(*leds)
     except Exception as e:
         webserver.stop()
         raise e
