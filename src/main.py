@@ -112,11 +112,10 @@ def normal_mode():
     millis_lastreconnect = 0
     while True:
         if not netconnect.isconnected():  # not connected, try reconnect
-            if not (netconnect.statusWLAN() == network.STAT_CONNECTING or netconnect.statusETH() == network.STAT_CONNECTING) and time.ticks_diff(
+            if not (netconnect.isconnectingWLAN() or netconnect.isconnectingETH()) and time.ticks_diff(
                     time.ticks_ms(), millis_lastreconnect) > 2000:  # try connecting after the interval
                 millis_lastreconnect = time.ticks_ms()
                 netconnect.connect(device_config.WLAN, device_config.ETH)
-                print("Connecting to network ...")
             if netconnect.isconnectingWLAN() or netconnect.isconnectingETH():
                 led.blink_connecting(led_7)
             if led_8.value():
@@ -141,6 +140,8 @@ def normal_mode():
 
 # startup code
 gc.collect()  # collect previous garbage
+print("Starting with device config : ")
+print(device_config)
 if btn_1.value():  # button pressed on power up
     print("Starting in config mode")
     config_mode()  # enter configuration mode

@@ -99,11 +99,11 @@ class Heos(object):
                 datajson = json.loads(data)
                 command = datajson["heos"]["command"]
                 result = datajson["heos"]["result"] == "success"
-                print(datajson)
+                print("Received data from heos :", command, result, datajson["heos"]["message"])
                 if result:
                     self.__lastCmdRecieved = time.ticks_ms()
                     if command == self.COMMAND_HEARTHBEAT[0]:
-                        if not self.__isconnected:  # first connection successful
+                        if not self.isconnected():  # first connection successful
                             self.__connection = Heos.CONNECTION_CONNECTED
                             self.__callCallback(self.__CMD_CONNECTED_CB)
                     elif command == self.COMMAND_GETPLAYERS[0]:
@@ -170,8 +170,14 @@ class Heos(object):
         """
         for k, v in kwargs.items():
             if k in command[1]:
-                command[k] = v
+                command[1][k] = v
         return command
+
+    def isconnected(self):
+        """
+        :return: True if connection ho heos was established
+        """
+        return self.getconnection() == self.CONNECTION_CONNECTED
 
     def getconnection(self):
         """

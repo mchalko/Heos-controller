@@ -20,6 +20,7 @@ def connectETH(ifconfig=None):
     once static address is set, if config can't be switched back to dhcp (library bug)
     :param ifconfig: tuple with ip config addresses - strings (IP, mask, gate, dns) or None for dhcp
     """
+    print("Connecting to Ethernet")
     if ifconfig:  # use static ip
         __interface_ETH.ifconfig(ifconfig)
 
@@ -35,11 +36,14 @@ def connectWLAN(ssid, password, ifconfig=None, bssid=None):
     :param ifconfig: tuple with ip config addresses - strings (IP, mask, gate, dns) or None for dhcp
     :param bssid: mac of network
     """
+    print("Connecting to wifi : ", ssid, password, ifconfig, bssid)
     if ifconfig:  # use static ip
         __interface_STA.ifconfig(ifconfig)
     __interface_STA.active(True)
     # empty pass string means no password. SSID can't be empty
-    __interface_STA.connect(ssid, password if password else None, bssid=bssid.encode("ascii") if bssid else None)
+    if not ssid:
+        return
+    __interface_STA.connect(ssid, password if password else None, bssid=ubinascii.unhexlify(bssid.replace(":", "")) if bssid else None)
 
 
 def connect(wlanconfig=None, ethconfig=None):
@@ -129,6 +133,7 @@ def startAP(apconfig):
     creates an access point using given params
     :param apconfig: APconfig object
     """
+    print("Starting access point")
     net = apconfig.net.getnet()
     if net:
         __interface_AP.ifconfig(net)
@@ -158,4 +163,3 @@ def discoverAPs():
                         AUTHMODE[n[4]],
                         str(n[5]).lower()])
     return netlist
-
