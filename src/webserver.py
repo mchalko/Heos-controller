@@ -12,7 +12,7 @@ __serverSocket = None  # socket of webserver
 # current wlans in reach
 __available_wlans = []
 __millis_wlandiscover = 0
-DISOVER_INTERVAL_MS = 10000  # interval for rescanning wlan networks in reach
+DISOVER_INTERVAL_MS = 30000  # interval for rescanning wlan networks in reach
 
 __resetscheduled_ms = None  # mark device reset call
 

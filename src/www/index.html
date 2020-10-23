@@ -304,7 +304,7 @@ function ipConfSelector(type, value){
 function btn_del_click(e){
 	var table = document.getElementById("tb_networks");
 	var row = e.path.find(elem => elem.tagName == "TR");
-	removeProfile(row.cells[0], row.cells[1]);
+	removeProfile(row.cells[0].innerHTML, row.cells[1].innerHTML);
 	table.deleteRow(row.rowIndex);
 }
 

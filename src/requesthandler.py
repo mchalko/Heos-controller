@@ -100,7 +100,7 @@ def post_remove_network(socket):
         toDelete = json.loads(data)
         for i, profile in enumerate(conf.WLAN.profiles):
             if profile.ssid == toDelete["ssid"]:
-                if not toDelete["bssid"] or toDelete["bssid"] == profile.bssid:
+                if (not toDelete["bssid"]) or toDelete["bssid"] == profile.bssid:
                     del conf.WLAN.profiles[i]
         config.saveconfig(conf)
         httputils.response(socket)
@@ -152,5 +152,3 @@ def post_update_submit(socket, boundary):
     for l in leds:
         l.off()
     return fileWritten
-
-

@@ -69,6 +69,7 @@ class Heos(object):
         initialize communication with the device
         """
         if self.__socket is None:
+            print("Starting heos device")
             self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create TCP socket
             self.__socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # reuse address, to prevent errors on reboot
             self.__socket.connect((ip, self.HEOS_PORT))  # listen on heos telnet port for responses
@@ -81,9 +82,20 @@ class Heos(object):
         stop communication with the device & cleanup
         """
         if self.__socket is not None:
+            print("Halting heos device")
             self.__socket.close()
             self.__socket = None
-        gc.collect()
+            self.__lastHearthbeat = 0
+            self.__lastCmdRecieved = 0
+            self.__lastGetstate = 0
+            self.__lastSign = 0
+            self.__lastGetplayers = 0
+
+            self.__connection = Heos.CONNECTION_NOT_CONNECTED
+            self.__pid = ""
+            self.__status = ""
+            self.__signed = False
+            gc.collect()
 
     def run(self):
         """
@@ -122,10 +134,8 @@ class Heos(object):
         if time.ticks_diff(time.ticks_ms(), self.__lastCmdRecieved) > self.__timeout:  # watch out for timeout
             self.__lastCmdRecieved = time.ticks_ms()
             self.__connection = Heos.CONNECTION_NOT_CONNECTED
-            self.__signed = False
-            self.__status = ""
-            self.__pid = ""
             self.__callCallback(self.__CMD_DISCONNECTED_CB)
+            self.stop()
 
         if time.ticks_diff(time.ticks_ms(), self.__lastHearthbeat) > self.__interval:  # send hearth beat
             self.__lastHearthbeat = time.ticks_ms()
@@ -270,12 +280,13 @@ class DiscoveryService(object):
         start & init discovery
         """
         if self.__socket is None:
+            print("Staring heos discovery")
             self.__socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # create UDP socket
             self.__socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.__socket.bind(('', self.SSDP_PORT))  # listen on ssdp port
             self.__socket.setblocking(False)  # do not actively wait
             mreq = bytes([int(x) for x in self.SSDP_ADDR.split(".")]) + bytes([0, 0, 0, 0])
-            self.__socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)  # join ssdp multicast group
+            self.__socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)  # join ssdp multicast
 
     def stop(self):
         """
@@ -284,7 +295,8 @@ class DiscoveryService(object):
         if self.__socket is not None:
             self.__socket.close()
             self.__socket = None
-        gc.collect()
+            print("Halting heos discovery")
+            gc.collect()
 
     def discover(self):
         """
@@ -345,3 +357,4 @@ class DiscoveryService(object):
         """
         for callback in self.__onDiscover:
             callback(ip)
+

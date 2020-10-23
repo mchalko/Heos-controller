@@ -36,16 +36,9 @@ def config_mode(): #
 
 
 def heos_ondiscover(ip): # stop discovery and start heos connection
-    global heos_device
-    global heos_discovery
-    heos_discovery.stop()
-    heos_device.start(ip)
     print("Heos device was discovered at : ", ip)
-
-def heos_ondisconnect(): # clear previous heos connection
     global heos_device
-    heos_device.stop()
-    print("Connection lost with heos device")
+    heos_device.start(ip)
 
 
 def sw1_shortpress(): # play state - play
@@ -107,7 +100,6 @@ def normal_mode():
         if button_hold_cb[i] : b.onhold(button_hold_cb[i])
     # init heos callbacks
     heos_discovery.ondiscover(heos_ondiscover)
-    heos_device.ondisconnect(heos_ondisconnect)
 
     millis_lastreconnect = 0
     while True:
@@ -124,15 +116,18 @@ def normal_mode():
             if not led_7.value(): # signal stable network connection
                 led_7.on()
 
-            if not heos_device.getconnection(): # not connected nor connecting to heos
+            if heos_device.getconnection() == Heos.CONNECTION_NOT_CONNECTED: # not connected nor connecting to heos
+                heos_device.stop()
                 heos_discovery.discover() # discover heos devices on network
             else: # heos connected or connecting
+                heos_discovery.stop()
                 heos_device.run()
 
             for b in buttons: # update button states
                 b.update()
-
-            if not heos_device.issigned(): # signal signed status of heos device
+            if not heos_device.isconnected():
+                led_8.off()
+            elif not heos_device.issigned(): # signal signed status of heos device
                 led.blink_connecting(led_8)
             elif not led_8.value():
                 led_8.on()
@@ -148,3 +143,4 @@ if btn_1.value():  # button pressed on power up
 else:
     print("starting in normal mode")
     normal_mode()  # enter normal mode
+
