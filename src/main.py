@@ -40,11 +40,12 @@ def heos_ondiscover(ip): # stop discovery and start heos connection
     global heos_discovery
     heos_discovery.stop()
     heos_device.start(ip)
-
+    print("Heos device was discovered at : ", ip)
 
 def heos_ondisconnect(): # clear previous heos connection
     global heos_device
     heos_device.stop()
+    print("Connection lost with heos device")
 
 
 def sw1_shortpress(): # play state - play
@@ -97,9 +98,10 @@ button_hold_cb = (None, None, None, None, sw5_onhold, sw6_onhold)
 def normal_mode():
     led.blink_init(*leds, count=2)
     # init button callbacks
-    for i, b in enumerate(buttons):  # button handler
+    for i, b in enumerate(buttons):
         b.onpress(lambda i=i: leds[i].on())
         b.onrelease(lambda i=i: leds[i].off())
+        # init callbacks if they are not None
         if button_shortpress_cb[i] : b.onpress(button_shortpress_cb[i])
         if button_longpress_cb[i] : b.onlongpress(button_longpress_cb[i])
         if button_hold_cb[i] : b.onhold(button_hold_cb[i])
@@ -114,8 +116,11 @@ def normal_mode():
                     time.ticks_ms(), millis_lastreconnect) > 2000:  # try connecting after the interval
                 millis_lastreconnect = time.ticks_ms()
                 netconnect.connect(device_config.WLAN, device_config.ETH)
+                print("Connecting to network ...")
             if netconnect.isconnectingWLAN() or netconnect.isconnectingETH():
                 led.blink_connecting(led_7)
+            if led_8.value():
+                led_8.off()
         else: # connected
             if not led_7.value(): # signal stable network connection
                 led_7.on()
@@ -137,6 +142,8 @@ def normal_mode():
 # startup code
 gc.collect()  # collect previous garbage
 if btn_1.value():  # button pressed on power up
+    print("Starting in config mode")
     config_mode()  # enter configuration mode
 else:
+    print("starting in normal mode")
     normal_mode()  # enter normal mode

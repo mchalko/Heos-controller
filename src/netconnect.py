@@ -39,7 +39,7 @@ def connectWLAN(ssid, password, ifconfig=None, bssid=None):
         __interface_STA.ifconfig(ifconfig)
     __interface_STA.active(True)
     # empty pass string means no password. SSID can't be empty
-    __interface_STA.connect(ssid, password if password else None, bssid=bssid)
+    __interface_STA.connect(ssid, password if password else None, bssid=bssid.encode("ascii") if bssid else None)
 
 
 def connect(wlanconfig=None, ethconfig=None):
@@ -158,3 +158,4 @@ def discoverAPs():
                         AUTHMODE[n[4]],
                         str(n[5]).lower()])
     return netlist
+

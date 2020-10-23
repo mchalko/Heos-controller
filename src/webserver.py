@@ -92,7 +92,7 @@ def listen():
                     if param == "content-type":
                         if values[0].lower() == "multipart/form-data" and len(values) > 1:
                             boundary = values[1].replace("boundary=", "")
-
+            print("Receiving request : ", method, path)
             if method == "GET":
                 if path == "/":  # send root web
                     get_root(client)

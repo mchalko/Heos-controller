@@ -85,7 +85,8 @@ def post_set_config(socket):
 def post_add_network(socket):
     conf = config.loadconfig()
     try:
-        conf.WLAN.profiles.append(structures.Profile(**json.load(socket)))
+        data = httputils.readsocket(socket).decode("utf-8")
+        conf.WLAN.profiles.append(structures.Profile(**json.loads(data)))
         config.saveconfig(conf)
         httputils.response(socket)
     except Exception:
@@ -95,7 +96,8 @@ def post_add_network(socket):
 def post_remove_network(socket):
     conf = config.loadconfig()
     try:
-        toDelete = json.load(socket)
+        data = httputils.readsocket(socket).decode("utf-8")
+        toDelete = json.loads(data)
         for i, profile in enumerate(conf.WLAN.profiles):
             if profile.ssid == toDelete["ssid"]:
                 if not toDelete["bssid"] or toDelete["bssid"] == profile.bssid:

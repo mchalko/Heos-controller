@@ -99,6 +99,7 @@ class Heos(object):
                 datajson = json.loads(data)
                 command = datajson["heos"]["command"]
                 result = datajson["heos"]["result"] == "success"
+                print(datajson)
                 if result:
                     self.__lastCmdRecieved = time.ticks_ms()
                     if command == self.COMMAND_HEARTHBEAT[0]:

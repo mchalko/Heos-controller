@@ -19,7 +19,7 @@ def sendfromfile(socket, file):
     :param file: file name
     """
     with open(file, "r") as f:
-        response(socket, "") # send response header
+        response(socket, "")  # send response header
         while True:
             try:
                 chunk = f.read(512)
@@ -27,8 +27,7 @@ def sendfromfile(socket, file):
                 break
             if not chunk:
                 break
-            writesocket(socket, chunk) # send file content
-
+            writesocket(socket, chunk)  # send file content
 
 
 def response(socket, data="", code=200, type=TYPE_HTML):
@@ -77,6 +76,24 @@ def writesocket(socket, data, ip="", port=None):
                 poll.poll()  # wait until socket is writeable again
 
         poll.unregister(socket)
+
+
+def readsocket(socket):
+    """
+    Reads all available data from socket
+    :param socket: socket
+    :return: data bytestring
+    """
+    data = b""
+    while True:
+        try:
+            chunk = socket.recv(512)
+        except OSError:
+            break
+        if not chunk:
+            break
+        data += chunk
+    return data
 
 
 def gethttprequest(line):
