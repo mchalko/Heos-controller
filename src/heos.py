@@ -111,21 +111,22 @@ class Heos(object):
                 datajson = json.loads(data)
                 command = datajson["heos"]["command"]
                 result = datajson["heos"]["result"] == "success"
-                print("Received data from heos :", command, result, datajson["heos"]["message"])
-                if result:
-                    self.__lastCmdRecieved = time.ticks_ms()
-                    if command == self.COMMAND_HEARTHBEAT[0]:
-                        if not self.isconnected():  # first connection successful
-                            self.__connection = Heos.CONNECTION_CONNECTED
-                            self.__callCallback(self.__CMD_CONNECTED_CB)
-                    elif command == self.COMMAND_GETPLAYERS[0]:
-                        for item in datajson["payload"]:
-                            if item["name"] == self.__config.name:
-                                self.__pid = item["pid"]
-                    elif command == self.COMMAND_LOGIN[0]:
-                        self.__signed = True
-                    elif command == self.COMMAND_GETSTATE[0]:
-                        self.__status = data["heos"]["message"].split("state=", 1)[1]
+                message = datajson["heos"]["message"]
+                print("Received data from heos :", command, result, message)
+
+                self.__lastCmdRecieved = time.ticks_ms()
+                if command == self.COMMAND_HEARTHBEAT[0] and result:
+                    if not self.isconnected():  # first connection successful
+                        self.__connection = Heos.CONNECTION_CONNECTED
+                        self.__callCallback(self.__CMD_CONNECTED_CB)
+                elif command == self.COMMAND_GETPLAYERS[0] and result:
+                    for item in datajson["payload"]:
+                        if item["name"] == self.__config.name:
+                            self.__pid = str(item["pid"])
+                elif command == self.COMMAND_LOGIN[0]:
+                    self.__signed = result
+                elif command == self.COMMAND_GETSTATE[0] and result:
+                    self.__status = message.split("state=", 1)[1]
                 if command in self.__callbacks:
                     self.__callCallback(command, datajson)
         except OSError: # do nothing if socket can't be read
@@ -146,7 +147,7 @@ class Heos(object):
                 self.__lastSign = time.ticks_ms()
                 self.send(*Heos.formatcmd(self.COMMAND_LOGIN, un=self.__config.user, pw=self.__config.password))
 
-        if self.issigned() and not self.getpid():
+        if self.isconnected() and not self.getpid():
             if time.ticks_diff(time.ticks_ms(), self.__lastGetplayers) > self.__interval:  # retrieve device info
                 self.__lastGetplayers = time.ticks_ms()
                 self.send(*self.COMMAND_GETPLAYERS)
@@ -164,11 +165,12 @@ class Heos(object):
         """
         if self.__socket:
             if attributes:
-                attribs = "&".join(["{}={}".format(self.__encode(k), self.__encode(v)) for k, v in attributes.items()])
+                attribs = "&".join(["{}={}".format(self.__encode(str(k)), self.__encode(str(v))) for k, v in attributes.items()])
                 request = "heos://{}?{}\r\n".format(command, attribs)
             else:
                 request = "heos://{}\r\n".format(command)
             httputils.writesocket(self.__socket, request)
+            print("Sending data to heos:",request.rstrip("\r\n"))
 
     @staticmethod
     def formatcmd(command, **kwargs):
@@ -357,4 +359,5 @@ class DiscoveryService(object):
         """
         for callback in self.__onDiscover:
             callback(ip)
+
 

@@ -56,17 +56,17 @@ def sw2_longpress(): # toggle mute
         heos_device.send("player/toggle_mute", {"pid":heos_device.getpid()})
 
 def sw3_shortpress(): # fav 1
-    if heos_device.getpid():
+    if heos_device.getpid() and heos_device.issigned():
         heos_device.send("browse/play_preset", {"pid":heos_device.getpid(),"preset":"1"})
 def sw3_longpress(): # fav 3
-    if heos_device.getpid():
+    if heos_device.getpid() and heos_device.issigned():
         heos_device.send("browse/play_preset", {"pid":heos_device.getpid(),"preset":"3"})
 
 def sw4_shortpress(): # fav 2
-    if heos_device.getpid():
+    if heos_device.getpid() and heos_device.issigned():
         heos_device.send("browse/play_preset", {"pid":heos_device.getpid(),"preset":"2"})
 def sw4_longpress(): # fav 4
-    if heos_device.getpid():
+    if heos_device.getpid() and heos_device.issigned():
         heos_device.send("browse/play_preset", {"pid":heos_device.getpid(),"preset":"4"})
 
 def sw5_shortpress(): # vol up

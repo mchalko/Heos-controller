@@ -31,6 +31,6 @@ def loadconfig(force=False):
             config = Configuration(**json.load(f))
             __cache = config
             return config
-    except OSError:  # file doesn't exists
-        return Configuration()
+    except Exception:  # file doesn't exists or the config is invalid
+        return Configuration() # return default
 

@@ -359,7 +359,7 @@ function sendConfig(){
 	if (document.getElementById("eth_select").value == "dhcp"){
 		data.append("eth_net", "None");
 	}else{
-		data.append("eth_net", document.getElementById("eth_ip") + ","+document.getElementById("eth_mask")+","+document.getElementById("eth_gate"));
+		data.append("eth_net", document.getElementById("eth_ip").value + ","+document.getElementById("eth_mask").value+","+document.getElementById("eth_gate").value);
 	}
 
 	data.append("wlan_en", document.getElementById("wlan_en").checked);

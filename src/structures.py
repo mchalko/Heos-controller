@@ -20,7 +20,7 @@ class Net(object):
         else:
             self.__conf = Net.stringtonet(string)
         # contains ip tuples
-        if net and any(not Net.isip(ip) for ip in net):
+        if self.__conf and any(not Net.isip(ip) for ip in self.__conf):
             raise ValueError  # raise error if invalid ip detected
 
     def getnet(self):
