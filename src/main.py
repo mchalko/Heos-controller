@@ -69,19 +69,19 @@ def sw4_longpress(): # fav 4
     if heos_device.getpid() and heos_device.issigned():
         heos_device.send("browse/play_preset", {"pid":heos_device.getpid(),"preset":"4"})
 
-def sw5_shortpress(): # vol up
-    if heos_device.getpid():
-        heos_device.send("player/volume_up", {"pid":heos_device.getpid(), "step":"3"})
-def sw5_onhold(): # continuous vol up
-    if heos_device.getpid():
-        heos_device.send("player/volume_up", {"pid":heos_device.getpid(), "step":"5"})
-
-def sw6_shortpress(): # vol down
+def sw5_shortpress(): # vol down
     if heos_device.getpid():
         heos_device.send("player/volume_down", {"pid":heos_device.getpid(),"step":"3"})
-def sw6_onhold():  # continuous vol down
+def sw5_onhold():  # continuous vol down
     if heos_device.getpid():
         heos_device.send("player/volume_down", {"pid":heos_device.getpid(),"step":"5"})
+
+def sw6_shortpress(): # vol up
+    if heos_device.getpid():
+        heos_device.send("player/volume_up", {"pid":heos_device.getpid(), "step":"3"})
+def sw6_onhold(): # continuous vol up
+    if heos_device.getpid():
+        heos_device.send("player/volume_up", {"pid":heos_device.getpid(), "step":"5"})
 
 
 button_shortpress_cb = (sw1_shortpress, sw2_shortpress, sw3_shortpress, sw4_shortpress, sw5_shortpress, sw6_shortpress)

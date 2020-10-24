@@ -32,5 +32,5 @@ def loadconfig(force=False):
             __cache = config
             return config
     except Exception:  # file doesn't exists or the config is invalid
-        return Configuration() # return default
-
+        print("Warning : Invalid or missing config")
+        return Configuration()  # return default

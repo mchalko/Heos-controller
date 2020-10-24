@@ -23,8 +23,10 @@ def connectETH(ifconfig=None):
     print("Connecting to Ethernet")
     if ifconfig:  # use static ip
         __interface_ETH.ifconfig(ifconfig)
-
-    __interface_ETH.active(True)
+    try:
+        __interface_ETH.active(True)
+    except OSError:
+        print("Error: Unable to activate ETH interface")
 
 
 def connectWLAN(ssid, password, ifconfig=None, bssid=None):
@@ -39,7 +41,10 @@ def connectWLAN(ssid, password, ifconfig=None, bssid=None):
     print("Connecting to wifi : ", ssid, password, ifconfig, bssid)
     if ifconfig:  # use static ip
         __interface_STA.ifconfig(ifconfig)
-    __interface_STA.active(True)
+    try:
+        __interface_STA.active(True)
+    except OSError:
+        print("Error: Unable to activate WLAN interface")
     # empty pass string means no password. SSID can't be empty
     if not ssid:
         return
@@ -137,7 +142,10 @@ def startAP(apconfig):
     net = apconfig.net.getnet()
     if net:
         __interface_AP.ifconfig(net)
-    __interface_AP.active(True)
+    try:
+        __interface_AP.active(True)
+    except OSError:
+        print("Error: Unable to activate AP")
     __interface_AP.config(essid=apconfig.ssid, password=apconfig.password,
                           authmode=network.AUTH_OPEN if not apconfig.password else network.AUTH_WPA2_PSK)
 
