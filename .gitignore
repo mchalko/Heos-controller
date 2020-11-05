@@ -3,3 +3,5 @@ build
 *.tar
 *.rar
 __pycache__
+firmware
+doc

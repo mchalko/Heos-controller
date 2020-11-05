@@ -165,9 +165,10 @@ def discoverAPs():
     networks = __interface_STA.scan()
     netlist = []  # final list of networks
     for n in networks:
-        netlist.append([n[0].decode('utf-8'),
-                        ubinascii.hexlify(n[1], ':').decode('ascii').upper(),
-                        str(n[3]) + " dBm",
-                        AUTHMODE[n[4]],
-                        str(n[5]).lower()])
+        if n[4] in AUTHMODE.keys():
+            netlist.append([n[0].decode('utf-8'),
+                            ubinascii.hexlify(n[1], ':').decode('ascii').upper(),
+                            str(n[3]) + " dBm",
+                            AUTHMODE[n[4]],
+                            str(n[5]).lower()])
     return netlist
